@@ -3,6 +3,8 @@
 # 💧 StopTheDrip
 ### Autonomous Recurring Subscription Leak Detection & Financial Clarity Engine
 
+[![Live Web App](https://img.shields.io/badge/Live_App-heharsh123.vercel.app-success?style=for-the-badge&logo=vercel)](https://heharsh123.vercel.app/#)
+[![Live Backend API](https://img.shields.io/badge/Backend_API-hyu--3lqa.onrender.com-blue?style=for-the-badge&logo=render)](https://hyu-3lqa.onrender.com/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
 [![Three.js](https://img.shields.io/badge/Three.js-black?style=for-the-badge&logo=three.js&logoColor=white)](https://threejs.org/)
@@ -11,6 +13,23 @@
 [![Zero-Storage](https://img.shields.io/badge/Storage-0--Disk_RAM--Only-blue?style=for-the-badge)]()
 
 **StopTheDrip** audits bank statements (PDF/CSV) to uncover forgotten subscriptions, hidden price hikes, and dormant capital leaks with zero disk storage and client-side hardware encryption.
+
+<br />
+
+# 🌐 LIVE DEPLOYMENT LINKS
+
+### 🚀 **Main Web Application**: [https://heharsh123.vercel.app/#](https://heharsh123.vercel.app/#)
+### ⚡ **Live Backend API**: [https://hyu-3lqa.onrender.com/](https://hyu-3lqa.onrender.com/)
+### 📚 **Interactive API Docs (Swagger)**: [https://hyu-3lqa.onrender.com/docs](https://hyu-3lqa.onrender.com/docs)
+
+</div>
+
+---
+
+<div align="center">
+
+# 👨‍💻 MADE BY HARSHIL GOYAL
+### 📧 **Email:** [arveharshil@gmail.com](mailto:arveharshil@gmail.com)
 
 </div>
 
@@ -93,8 +112,8 @@ stop-the-drip/
 - **Build Command**: `npm run build`
 - **Output Directory**: `dist`
 - **Environment Variables**:
-  - `VITE_API_URL`: Your Render backend URL
-  - `VITE_API_BASE_URL`: Your Render backend URL
+  - `VITE_API_URL`: `https://hyu-3lqa.onrender.com`
+  - `VITE_API_BASE_URL`: `https://hyu-3lqa.onrender.com`
   - `VITE_FIREBASE_API_KEY`: Firebase API Key
   - `VITE_FIREBASE_AUTH_DOMAIN`: Firebase Auth Domain
   - `VITE_FIREBASE_PROJECT_ID`: Firebase Project ID
@@ -104,6 +123,13 @@ stop-the-drip/
 
 ---
 
-## 🛡️ License
+## 🛡️ Author & License
+
+<div align="center">
+
+### **Developed by Harshil Goyal**
+**Contact / Email**: [arveharshil@gmail.com](mailto:arveharshil@gmail.com)
+
+</div>
 
 MIT License. Designed with privacy-first principles.
