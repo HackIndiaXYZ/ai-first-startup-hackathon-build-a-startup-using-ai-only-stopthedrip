@@ -5,7 +5,7 @@ import { signInWithGoogle, logOut, subscribeToAuthChanges, isFirebaseConfigured 
 
 const API_BASE_URL = (import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
 
-// Default initial dataset matching the cyber-financial design tokens
+// Baseline dataset matching the design system
 const INITIAL_RESULTS = {
   total_leaks_detected: 5,
   total_annual_leak: 18468,
@@ -21,7 +21,7 @@ const INITIAL_RESULTS = {
       merchant: 'Cult.fit Gym & Live',
       tag: 'Forgotten',
       confidence: 0.96,
-      subtitle: 'Last accessed 4 months ago • Medium difficulty to cancel',
+      subtitle: 'Zero check-ins in 4 months • Medium difficulty',
       monthly_amount: 999,
       annual_amount: 11988,
       description: "Zero partner gym check-ins detected since November. Auto-renews monthly on linked credit card ending in 4092.",
@@ -40,7 +40,7 @@ const INITIAL_RESULTS = {
       merchant: 'Netflix Inc',
       tag: 'Active',
       confidence: 0.94,
-      subtitle: 'Streamed 2 days ago • Easy cancellation',
+      subtitle: 'Streamed 2 days ago • Easy downgrade/cancel',
       monthly_amount: 649,
       annual_amount: 7788,
       description: 'High engagement streaming profile. Consider downgrading to standard HD if 4K multi-screen is unused.',
@@ -119,8 +119,7 @@ const INITIAL_RESULTS = {
 }
 
 /**
- * 3D Interactive WebGL Drip Canvas
- * Futuristic metallic torus source with gravity-accelerated glowing amber drops
+ * Enhanced 3D WebGL Three.js Canvas with Mouse Parallax & Splash Physics
  */
 function DripCanvas() {
   const mountRef = useRef(null)
@@ -128,11 +127,11 @@ function DripCanvas() {
   useEffect(() => {
     const mount = mountRef.current
     if (!mount) return
-    const width = mount.clientWidth || 320
-    const height = mount.clientHeight || 340
+    const width = mount.clientWidth || 340
+    const height = mount.clientHeight || 360
 
     const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 100)
+    const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100)
     camera.position.set(0, 0.6, 6.2)
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
@@ -140,42 +139,58 @@ function DripCanvas() {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     mount.appendChild(renderer.domElement)
 
-    // Oxidized copper pipe joint (source of flow)
-    const pipeGeo = new THREE.TorusGeometry(1.15, 0.16, 16, 48)
+    // Metallic Pipe Joint (Source of the leak)
+    const pipeGeo = new THREE.TorusGeometry(1.18, 0.18, 20, 64)
     const pipeMat = new THREE.MeshStandardMaterial({
-      color: 0x6fa88c,
-      metalness: 0.45,
-      roughness: 0.35,
+      color: 0x6FA88C,
+      metalness: 0.6,
+      roughness: 0.3,
     })
     const pipe = new THREE.Mesh(pipeGeo, pipeMat)
-    pipe.rotation.x = Math.PI / 2.4
-    pipe.position.y = 1.4
+    pipe.rotation.x = Math.PI / 2.3
+    pipe.position.y = 1.45
     scene.add(pipe)
 
-    // Wireframe halo ring
-    const wireGeo = new THREE.TorusGeometry(1.4, 0.015, 8, 48)
-    const wireMat = new THREE.MeshBasicMaterial({ color: 0x2b303b })
+    // Concentric Cyber Wire Ring
+    const wireGeo = new THREE.TorusGeometry(1.48, 0.015, 8, 64)
+    const wireMat = new THREE.MeshBasicMaterial({ color: 0x3E4756 })
     const wireRing = new THREE.Mesh(wireGeo, wireMat)
-    wireRing.rotation.x = Math.PI / 2.4
-    wireRing.position.y = 1.4
+    wireRing.rotation.x = Math.PI / 2.3
+    wireRing.position.y = 1.45
     scene.add(wireRing)
 
-    // Lighting setup
-    const ambient = new THREE.AmbientLight(0xffffff, 0.65)
+    // Floor Splash Ripple Disc
+    const splashGeo = new THREE.RingGeometry(0.08, 0.65, 32)
+    const splashMat = new THREE.MeshBasicMaterial({
+      color: 0xD99A4E,
+      transparent: true,
+      opacity: 0,
+      side: THREE.DoubleSide
+    })
+    const splash = new THREE.Mesh(splashGeo, splashMat)
+    splash.rotation.x = -Math.PI / 2
+    splash.position.y = -1.6
+    scene.add(splash)
+
+    // Dynamic Lighting
+    const ambient = new THREE.AmbientLight(0xffffff, 0.7)
     scene.add(ambient)
-    const key = new THREE.DirectionalLight(0xffffff, 0.95)
-    key.position.set(3, 4, 5)
+    const key = new THREE.DirectionalLight(0xffffff, 1.2)
+    key.position.set(3, 5, 5)
     scene.add(key)
-    const rim = new THREE.DirectionalLight(0xd99a4e, 0.6)
+    const rim = new THREE.DirectionalLight(0xD99A4E, 0.8)
     rim.position.set(-4, -2, -3)
     scene.add(rim)
+    const emeraldRim = new THREE.DirectionalLight(0x6FA88C, 0.5)
+    emeraldRim.position.set(0, -3, 2)
+    scene.add(emeraldRim)
 
-    // Flowing amber droplets
-    const dropGeo = new THREE.SphereGeometry(0.12, 16, 16)
+    // Droplets
+    const dropGeo = new THREE.SphereGeometry(0.12, 20, 20)
     const dropMat = new THREE.MeshStandardMaterial({
-      color: 0xd99a4e,
-      metalness: 0.2,
-      roughness: 0.2,
+      color: 0xD99A4E,
+      metalness: 0.3,
+      roughness: 0.15,
       transparent: true,
     })
 
@@ -197,13 +212,28 @@ function DripCanvas() {
     let raf
     const clock = new THREE.Clock()
 
+    // Mouse parallax target
+    let mouseX = 0
+    let mouseY = 0
+    const onMouseMove = (e) => {
+      const rect = mount.getBoundingClientRect()
+      mouseX = ((e.clientX - rect.left) / rect.width - 0.5) * 0.8
+      mouseY = ((e.clientY - rect.top) / rect.height - 0.5) * 0.8
+    }
+    mount.addEventListener('mousemove', onMouseMove)
+
     function animate() {
       raf = requestAnimationFrame(animate)
       const dt = clock.getDelta()
       elapsed += dt
 
-      pipe.rotation.z += dt * 0.2
-      wireRing.rotation.z += dt * 0.2
+      // Smooth mouse lerp
+      camera.position.x += (mouseX - camera.position.x) * 0.05
+      camera.position.y += (0.6 - mouseY - camera.position.y) * 0.05
+      camera.lookAt(0, 0, 0)
+
+      pipe.rotation.z += dt * 0.25
+      wireRing.rotation.z -= dt * 0.15
 
       drops.forEach((d) => {
         const t = (elapsed - d.delay) % 1.9
@@ -212,12 +242,20 @@ function DripCanvas() {
           return
         }
         d.mesh.visible = true
-        const fallProgress = Math.min(t / 1.5, 1)
-        const y = 1.1 - fallProgress * fallProgress * 2.7
+        const fallProgress = Math.min(t / 1.45, 1)
+        const y = 1.15 - fallProgress * fallProgress * 2.75
         d.mesh.position.set(0, y, 0)
-        const stretch = 1 + fallProgress * 0.7
+        const stretch = 1 + fallProgress * 0.75
         d.mesh.scale.set(1 / stretch, stretch, 1 / stretch)
-        d.mesh.material.opacity = t < 1.5 ? 1 : Math.max(0, 1 - (t - 1.5) / 0.4)
+        d.mesh.material.opacity = t < 1.45 ? 1 : Math.max(0, 1 - (t - 1.45) / 0.45)
+
+        // Trigger ripple
+        if (fallProgress > 0.95) {
+          splash.material.opacity = THREE.MathUtils.lerp(splash.material.opacity, 0.4, 0.2)
+          splash.scale.setScalar(1 + (fallProgress - 0.95) * 8)
+        } else {
+          splash.material.opacity = THREE.MathUtils.lerp(splash.material.opacity, 0, 0.1)
+        }
       })
 
       renderer.render(scene, camera)
@@ -237,6 +275,7 @@ function DripCanvas() {
     return () => {
       cancelAnimationFrame(raf)
       window.removeEventListener('resize', handleResize)
+      if (mount) mount.removeEventListener('mousemove', onMouseMove)
       renderer.dispose()
       pipeGeo.dispose()
       pipeMat.dispose()
@@ -244,19 +283,23 @@ function DripCanvas() {
       wireMat.dispose()
       dropGeo.dispose()
       dropMat.dispose()
+      splashGeo.dispose()
+      splashMat.dispose()
       if (mount.contains(renderer.domElement)) {
         mount.removeChild(renderer.domElement)
       }
     }
   }, [])
 
-  return <div ref={mountRef} className="w-full h-full min-h-[300px]" />
+  return <div ref={mountRef} className="w-full h-full min-h-[320px] cursor-crosshair" />
 }
 
 export default function App() {
   const [currentState, setCurrentState] = useState('upload') // 'upload' | 'analyzing' | 'results'
   const [resultsData, setResultsData] = useState(INITIAL_RESULTS)
   const [openAccordions, setOpenAccordions] = useState({ 'item-1': true })
+  const [filterTag, setFilterTag] = useState('All') // 'All' | 'Forgotten' | 'Active'
+  const [simulationHorizon, setSimulationHorizon] = useState(1) // 1, 3, 5 years
   const [errorMessage, setErrorMessage] = useState(null)
   const [isDragOver, setIsDragOver] = useState(false)
   const [encryptionStatus, setEncryptionStatus] = useState('256-bit local AES-GCM verified')
@@ -267,14 +310,13 @@ export default function App() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [showConfigHelp, setShowConfigHelp] = useState(false)
 
-  // Analyzing telemetry progression
+  // Telemetry Progression
   const [analyzingStep, setAnalyzingStep] = useState(1)
   const [loadingTitle, setLoadingTitle] = useState('Initializing in-memory decryption...')
   const [loadingDesc, setLoadingDesc] = useState('256-bit AES-GCM hardware cipher active')
 
   const fileInputRef = useRef(null)
 
-  // Listen to Firebase Auth state
   useEffect(() => {
     const unsubscribe = subscribeToAuthChanges((user) => {
       setCurrentUser(user)
@@ -306,7 +348,7 @@ export default function App() {
       setErrorMessage(null)
       await signInWithGoogle()
     } catch (err) {
-      console.error('Google SSO Sign in error:', err)
+      console.error('Google SSO error:', err)
       if (err.code !== 'auth/popup-closed-by-user') {
         setErrorMessage(err.message || 'Failed to authenticate with Google.')
       }
@@ -388,7 +430,6 @@ export default function App() {
 
         data = await response.json()
       } else {
-        // Sample analysis fallback
         const endpoint = `${API_BASE_URL}/analyze`
         const response = await fetch(endpoint, {
           method: 'POST',
@@ -401,7 +442,6 @@ export default function App() {
         }
       }
 
-      // Smooth step transition
       const elapsed = Date.now() - startTime
       if (elapsed < 1800) {
         await new Promise((r) => setTimeout(r, 1800 - elapsed))
@@ -462,12 +502,17 @@ export default function App() {
     document.body.removeChild(link)
   }
 
-  const handleExportPDF = () => {
-    window.print()
-  }
+  const filteredLeaks = (resultsData.leak_vectors || []).filter((item) => {
+    if (filterTag === 'All') return true
+    return item.tag === filterTag
+  })
 
   return (
-    <div className="min-h-screen bg-ink text-text-primary flex flex-col selection:bg-amber/30 selection:text-amber">
+    <div className="min-h-screen bg-[#0E1117] text-[#ECEEF3] flex flex-col selection:bg-[#D99A4E]/30 selection:text-[#D99A4E] relative overflow-x-hidden">
+      {/* Dynamic Ambient Background Glows */}
+      <div className="absolute top-0 left-1/4 w-[600px] h-[400px] bg-[#6FA88C]/10 rounded-full blur-[140px] pointer-events-none -z-10"></div>
+      <div className="absolute top-20 right-10 w-[500px] h-[500px] bg-[#D99A4E]/10 rounded-full blur-[160px] pointer-events-none -z-10"></div>
+
       {/* Hidden file input */}
       <input
         type="file"
@@ -477,34 +522,36 @@ export default function App() {
         className="hidden"
       />
 
-      {/* FUTURISTIC HEADER */}
-      <header className="w-full border-b border-hairline bg-ink/80 backdrop-blur-xl sticky top-0 z-40">
+      {/* LUXURY FROSTED HEADER */}
+      <header className="w-full border-b border-[#2B303B]/70 bg-[#0E1117]/85 backdrop-blur-2xl sticky top-0 z-40 transition-all">
         <div className="max-w-7xl mx-auto px-6 md:px-12 h-20 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <button 
               onClick={() => switchState('upload')}
-              className="text-left font-headline text-2xl md:text-3xl font-normal tracking-tight text-text-primary hover:text-amber transition-colors flex items-center gap-2"
+              className="text-left font-headline text-2xl md:text-3xl font-normal tracking-tight text-[#ECEEF3] hover:text-[#D99A4E] transition-all flex items-center gap-2.5 group"
             >
-              <span className="text-verdigris text-xl">💧</span>
+              <div className="w-8 h-8 rounded-lg bg-[#181C25] border border-[#2B303B] flex items-center justify-center text-lg group-hover:scale-110 transition-transform">
+                💧
+              </div>
               <span>stop the drip</span>
             </button>
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-surface border border-hairline rounded-full text-xs text-text-muted">
-              <span className="w-1.5 h-1.5 rounded-full bg-verdigris animate-pulse"></span>
-              <span className="font-mono text-[11px]">neural engine active</span>
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-[#181C25] border border-[#2B303B] rounded-full text-xs text-[#8A93A3]">
+              <span className="w-2 h-2 rounded-full bg-[#6FA88C] radar-glow"></span>
+              <span className="font-mono text-[11px] tracking-wide">neural audit online</span>
             </div>
           </div>
 
           {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-8 text-xs font-mono uppercase tracking-wider text-text-muted">
+          <nav className="hidden md:flex items-center gap-8 text-xs font-mono uppercase tracking-widest text-[#8A93A3]">
             <button
               onClick={() => switchState('upload')}
-              className={`hover:text-text-primary transition-colors ${currentState === 'upload' ? 'text-amber font-semibold' : ''}`}
+              className={`hover:text-[#ECEEF3] transition-colors ${currentState === 'upload' ? 'text-[#D99A4E] font-semibold' : ''}`}
             >
               Statement Audit
             </button>
             <button
               onClick={() => switchState('results')}
-              className={`hover:text-text-primary transition-colors ${currentState === 'results' ? 'text-amber font-semibold' : ''}`}
+              className={`hover:text-[#ECEEF3] transition-colors ${currentState === 'results' ? 'text-[#D99A4E] font-semibold' : ''}`}
             >
               Leak Vectors ({resultsData.leak_vectors?.length || 5})
             </button>
@@ -512,7 +559,7 @@ export default function App() {
               href="https://www.ilovepdf.com/unlock_pdf"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-verdigris hover:text-verdigris/80 transition-colors flex items-center gap-1"
+              className="text-[#6FA88C] hover:text-[#6FA88C]/80 transition-colors flex items-center gap-1 font-semibold"
             >
               <span>Unlock PDF</span>
               <span className="text-[10px]">↗</span>
@@ -525,20 +572,20 @@ export default function App() {
               <div className="relative">
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center gap-2.5 p-1 pl-3 pr-2 rounded-full bg-surface border border-hairline hover:border-amber transition-all text-left shadow-sm"
+                  className="flex items-center gap-2.5 p-1 pl-3 pr-2 rounded-full bg-[#181C25] border border-[#2B303B] hover:border-[#D99A4E] transition-all text-left shadow-lg"
                 >
-                  <span className="text-xs font-medium text-text-primary max-w-[130px] truncate">
+                  <span className="text-xs font-medium text-[#ECEEF3] max-w-[130px] truncate">
                     {currentUser.displayName || currentUser.email?.split('@')[0] || 'User'}
                   </span>
                   {currentUser.photoURL ? (
                     <img
                       src={currentUser.photoURL}
                       alt="User avatar"
-                      className="w-7 h-7 rounded-full border border-hairline object-cover"
+                      className="w-7 h-7 rounded-full border border-[#2B303B] object-cover"
                       referrerPolicy="no-referrer"
                     />
                   ) : (
-                    <div className="w-7 h-7 rounded-full bg-amber/20 text-amber border border-amber/40 flex items-center justify-center text-xs font-semibold">
+                    <div className="w-7 h-7 rounded-full bg-[#D99A4E]/20 text-[#D99A4E] border border-[#D99A4E]/40 flex items-center justify-center text-xs font-semibold">
                       {(currentUser.displayName || currentUser.email || 'U')[0].toUpperCase()}
                     </div>
                   )}
@@ -546,14 +593,14 @@ export default function App() {
 
                 {/* Dropdown Menu */}
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-60 bg-surface border border-hairline rounded-xl shadow-2xl py-2 z-50 animate-in fade-in">
-                    <div className="px-4 py-2.5 border-b border-hairline">
-                      <p className="text-xs font-medium text-text-primary truncate">{currentUser.displayName || 'Google Account'}</p>
-                      <p className="text-[11px] text-text-muted truncate font-mono">{currentUser.email}</p>
+                  <div className="absolute right-0 mt-2 w-64 bg-[#181C25] border border-[#2B303B] rounded-2xl shadow-2xl py-2.5 z-50 animate-in fade-in">
+                    <div className="px-4 py-2 border-b border-[#2B303B]">
+                      <p className="text-xs font-medium text-[#ECEEF3] truncate">{currentUser.displayName || 'Google Account'}</p>
+                      <p className="text-[11px] text-[#8A93A3] truncate font-mono">{currentUser.email}</p>
                     </div>
                     <button
                       onClick={handleSignOut}
-                      className="w-full text-left px-4 py-2 text-xs text-error hover:bg-surface-container-high transition-colors flex items-center gap-2"
+                      className="w-full text-left px-4 py-2.5 text-xs text-[#FF6B6B] hover:bg-[#202531] transition-colors flex items-center gap-2"
                     >
                       <span className="material-symbols-outlined text-[16px]">logout</span>
                       <span>Sign out</span>
@@ -565,7 +612,7 @@ export default function App() {
               <button
                 onClick={handleGoogleSignIn}
                 disabled={isSigningIn}
-                className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-surface hover:bg-surface-container-high border border-hairline hover:border-amber transition-all text-xs font-medium text-text-primary shadow-sm active:scale-95 group"
+                className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-[#181C25] hover:bg-[#202531] border border-[#2B303B] hover:border-[#D99A4E] transition-all text-xs font-medium text-[#ECEEF3] shadow-md active:scale-95 group"
               >
                 <svg className="w-4 h-4 group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.9c2.28-2.1 3.64-5.2 3.64-9.15z"/>
@@ -583,27 +630,27 @@ export default function App() {
       {/* MAIN CONTAINER */}
       <main className="flex-1 w-full max-w-7xl mx-auto px-6 md:px-12 py-10 md:py-16">
         {/* REVIEWER VIEW TOGGLES */}
-        <aside aria-label="Reviewer Controls" className="fixed bottom-6 right-6 z-50 flex items-center gap-2 p-1.5 bg-surface/90 backdrop-blur-md border border-hairline rounded-lg shadow-xl">
-          <span className="text-[11px] text-text-muted px-2 font-mono">Stage:</span>
+        <aside aria-label="Reviewer Controls" className="fixed bottom-6 right-6 z-50 flex items-center gap-2 p-1.5 bg-[#181C25]/90 backdrop-blur-xl border border-[#2B303B] rounded-xl shadow-2xl">
+          <span className="text-[11px] text-[#8A93A3] px-2 font-mono">Stage:</span>
           <button
-            className={`px-3 py-1 rounded text-xs transition-all font-mono ${
-              currentState === 'upload' ? 'bg-amber text-ink font-semibold shadow' : 'text-text-muted hover:text-text-primary'
+            className={`px-3 py-1 rounded-lg text-xs transition-all font-mono ${
+              currentState === 'upload' ? 'bg-[#D99A4E] text-[#12151C] font-semibold shadow' : 'text-[#8A93A3] hover:text-[#ECEEF3]'
             }`}
             onClick={() => switchState('upload')}
           >
             1. upload
           </button>
           <button
-            className={`px-3 py-1 rounded text-xs transition-all font-mono ${
-              currentState === 'analyzing' ? 'bg-amber text-ink font-semibold shadow' : 'text-text-muted hover:text-text-primary'
+            className={`px-3 py-1 rounded-lg text-xs transition-all font-mono ${
+              currentState === 'analyzing' ? 'bg-[#D99A4E] text-[#12151C] font-semibold shadow' : 'text-[#8A93A3] hover:text-[#ECEEF3]'
             }`}
             onClick={() => switchState('analyzing')}
           >
             2. analyzing
           </button>
           <button
-            className={`px-3 py-1 rounded text-xs transition-all font-mono ${
-              currentState === 'results' ? 'bg-amber text-ink font-semibold shadow' : 'text-text-muted hover:text-text-primary'
+            className={`px-3 py-1 rounded-lg text-xs transition-all font-mono ${
+              currentState === 'results' ? 'bg-[#D99A4E] text-[#12151C] font-semibold shadow' : 'text-[#8A93A3] hover:text-[#ECEEF3]'
             }`}
             onClick={() => switchState('results')}
           >
@@ -612,83 +659,87 @@ export default function App() {
         </aside>
 
         {/* ========================================================= */}
-        {/* STATE 1: UPLOAD & 3D HERO DASHBOARD */}
+        {/* STATE 1: 3D HERO & UPLOAD WORKSPACE */}
         {/* ========================================================= */}
         {currentState === 'upload' && (
           <div className="space-y-16 animate-in fade-in duration-500">
-            {/* 3D HERO SHOWCASE */}
-            <div className="glass-panel rounded-2xl p-8 md:p-12 shadow-2xl relative overflow-hidden">
+            {/* HERO 3D EXPERIENCE */}
+            <div className="glass-panel rounded-3xl p-8 md:p-12 shadow-2xl relative overflow-hidden gradient-border-glow">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-                {/* Left: Narrative & Telemetry */}
+                {/* Left Telemetry & Story */}
                 <div className="lg:col-span-7 space-y-6 z-10">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-surface border border-hairline rounded-full text-xs text-verdigris font-mono">
-                    <span className="w-1.5 h-1.5 rounded-full bg-verdigris animate-ping"></span>
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#181C25] border border-[#2B303B] rounded-full text-xs text-[#6FA88C] font-mono">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#6FA88C] animate-ping"></span>
                     <span>autonomous recurring capital audit</span>
                   </div>
-                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-headline font-normal text-text-primary leading-[1.12]">
-                    Every month, something <span className="italic text-amber font-headline">drips out</span> unnoticed.
+                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-headline font-normal text-[#ECEEF3] leading-[1.12]">
+                    Every month, something <span className="italic text-[#D99A4E] font-headline">drips out</span> unnoticed.
                   </h1>
-                  <p className="text-base text-text-muted leading-relaxed max-w-xl font-normal">
-                    Upload your bank statement. StopTheDrip detects dormant recurring subscriptions, sneaky price hikes, and forgotten services — with zero disk storage and in-browser 256-bit AES encryption.
+                  <p className="text-base text-[#8A93A3] leading-relaxed max-w-xl font-normal">
+                    Upload your bank statement. StopTheDrip isolates forgotten subscriptions, hidden price hikes, and dormant recurring charges — with zero disk storage and in-browser 256-bit AES-GCM encryption.
                   </p>
 
-                  {/* Compounding Metrics */}
-                  <div className="flex flex-wrap items-center gap-10 pt-2 border-t border-hairline">
+                  {/* Compounding Live KPIs */}
+                  <div className="grid grid-cols-3 gap-6 pt-4 border-t border-[#2B303B]/80">
                     <div>
-                      <div className="font-headline text-3xl md:text-4xl text-amber font-normal">
+                      <div className="font-headline text-3xl md:text-4xl text-[#D99A4E] font-normal">
                         ₹{(resultsData.total_monthly_leak || 1539).toLocaleString()}
                       </div>
-                      <div className="text-xs font-mono text-text-muted mt-1 uppercase tracking-wider">
-                        leaking every month
+                      <div className="text-[11px] font-mono text-[#8A93A3] mt-1 uppercase tracking-wider">
+                        monthly leak
                       </div>
                     </div>
                     <div>
-                      <div className="font-headline text-3xl md:text-4xl text-text-primary font-normal">
+                      <div className="font-headline text-3xl md:text-4xl text-[#ECEEF3] font-normal">
                         ₹{(resultsData.total_annual_leak || 18468).toLocaleString()}
                       </div>
-                      <div className="text-xs font-mono text-text-muted mt-1 uppercase tracking-wider">
-                        per year, if untouched
+                      <div className="text-[11px] font-mono text-[#8A93A3] mt-1 uppercase tracking-wider">
+                        1-yr loss
                       </div>
                     </div>
                     <div>
-                      <div className="font-headline text-3xl md:text-4xl text-verdigris font-normal">
+                      <div className="font-headline text-3xl md:text-4xl text-[#6FA88C] font-normal">
                         ₹{(resultsData.potential_annual_savings || 12576).toLocaleString()}
                       </div>
-                      <div className="text-xs font-mono text-text-muted mt-1 uppercase tracking-wider">
-                        reclaimable savings
+                      <div className="text-[11px] font-mono text-[#8A93A3] mt-1 uppercase tracking-wider">
+                        reclaimable
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Right: Realtime Three.js 3D WebGL Drip Canvas */}
-                <div className="lg:col-span-5 h-[340px] relative flex items-center justify-center">
-                  <div className="w-full h-full rounded-2xl bg-surface/40 border border-hairline/60 overflow-hidden shadow-inner relative">
+                {/* Right 3D Interactive Three.js Canvas */}
+                <div className="lg:col-span-5 h-[350px] relative flex items-center justify-center">
+                  <div className="w-full h-full rounded-2xl bg-[#12151C]/60 border border-[#2B303B] overflow-hidden shadow-2xl relative group">
                     <DripCanvas />
-                    <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded bg-ink/70 border border-hairline text-[10px] font-mono text-text-muted backdrop-blur-sm pointer-events-none">
-                      3D Realtime WebGL
+                    <div className="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-[#0E1117]/80 border border-[#2B303B] text-[10px] font-mono text-[#6FA88C] backdrop-blur-sm pointer-events-none flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#6FA88C] animate-pulse"></span>
+                      <span>3D WebGL Telemetry</span>
+                    </div>
+                    <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-md bg-[#0E1117]/80 border border-[#2B303B] text-[10px] font-mono text-[#8A93A3] backdrop-blur-sm pointer-events-none">
+                      Move mouse to tilt
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* STATEMENT AUDIT WORKSPACE (Upload & How-to Grid) */}
+            {/* AUDIT WORKSPACE (Upload Dropzone + Step-by-Step Guide) */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-              {/* DROPZONE & TRIGGER */}
+              {/* UPLOAD WORKSPACE */}
               <div className="lg:col-span-7 space-y-6">
-                <div className="space-y-2">
-                  <h2 className="font-headline text-2xl text-text-primary font-normal">
-                    Upload Bank Statement
+                <div className="space-y-1.5">
+                  <h2 className="font-headline text-2xl text-[#ECEEF3] font-normal">
+                    Audit Your Statement
                   </h2>
-                  <p className="text-xs text-text-muted">
-                    Supports PDF, CSV, Excel exports from HDFC, ICICI, SBI, Axis, Kotak, Chase, Amex, etc.
+                  <p className="text-xs text-[#8A93A3]">
+                    Accepts statements from HDFC, ICICI, SBI, Axis, Kotak, Chase, Amex, and global banks.
                   </p>
                 </div>
 
                 {/* Error Banner */}
                 {errorMessage && (
-                  <div className="p-4 bg-error-container border border-error/40 text-error rounded-xl text-xs flex items-center gap-3">
+                  <div className="p-4 bg-[#3A1B1B] border border-[#FF6B6B]/40 text-[#FF6B6B] rounded-2xl text-xs flex items-center gap-3">
                     <span className="material-symbols-outlined text-[18px]">error</span>
                     <span>{errorMessage}</span>
                   </div>
@@ -696,74 +747,74 @@ export default function App() {
 
                 {/* Interactive Drag & Drop Area */}
                 <div
-                  className={`border border-dashed transition-all rounded-2xl p-10 cursor-pointer flex flex-col items-start gap-4 ${
+                  className={`border border-dashed transition-all rounded-3xl p-10 cursor-pointer flex flex-col items-start gap-4 ${
                     isDragOver
-                      ? 'border-amber bg-surface border-glow-amber scale-[1.01]'
-                      : 'border-hairline hover:border-amber bg-surface/60 hover:bg-surface'
+                      ? 'border-[#D99A4E] bg-[#181C25] shadow-2xl scale-[1.01]'
+                      : 'border-[#2B303B] hover:border-[#D99A4E] bg-[#181C25]/50 hover:bg-[#181C25]'
                   }`}
                   onClick={() => fileInputRef.current?.click()}
                   onDragOver={(e) => { e.preventDefault(); setIsDragOver(true) }}
                   onDragLeave={() => setIsDragOver(false)}
                   onDrop={handleDrop}
                 >
-                  <div className="w-12 h-12 rounded-xl border border-hairline bg-ink flex items-center justify-center text-amber shadow-inner">
-                    <span className="material-symbols-outlined text-[26px]">upload_file</span>
+                  <div className="w-14 h-14 rounded-2xl border border-[#2B303B] bg-[#0E1117] flex items-center justify-center text-[#D99A4E] shadow-inner">
+                    <span className="material-symbols-outlined text-[28px]">upload_file</span>
                   </div>
                   <div className="space-y-1.5">
-                    <p className="text-sm font-medium text-text-primary">
-                      Drop statement PDF or CSV here, or <span className="text-amber underline underline-offset-4 font-semibold">browse files</span>
+                    <p className="text-sm font-medium text-[#ECEEF3]">
+                      Drop bank statement PDF or CSV here, or <span className="text-[#D99A4E] underline underline-offset-4 font-semibold">browse files</span>
                     </p>
-                    <p className="text-xs text-text-muted">
-                      Direct in-browser AES-256 encryption • Zero files ever saved to disk
+                    <p className="text-xs text-[#8A93A3]">
+                      Encrypted locally in RAM before transmission • Zero files stored on disk
                     </p>
                   </div>
                 </div>
 
-                {/* Sample Statement Action */}
+                {/* Instant Sample Button */}
                 <div className="flex flex-wrap items-center gap-4 pt-1">
                   <button
-                    className="px-6 py-3 rounded-xl bg-amber text-ink text-sm font-semibold hover:bg-amber/90 transition-all flex items-center gap-2 shadow-lg shadow-amber/10 active:scale-95"
+                    className="shimmer-btn px-7 py-3.5 rounded-2xl text-[#12151C] text-sm font-semibold flex items-center gap-2.5 shadow-xl active:scale-95"
                     onClick={() => performAnalysis(null, true)}
                   >
                     <span className="material-symbols-outlined text-[18px]">bolt</span>
-                    Try Sample Audit (142 Transactions)
+                    Try Live Sample Audit (142 Transactions)
                   </button>
                 </div>
 
                 {/* Quick Security Status Badges */}
-                <div className="flex flex-wrap items-center gap-6 text-xs text-text-muted pt-4 border-t border-hairline">
+                <div className="flex flex-wrap items-center gap-6 text-xs text-[#8A93A3] pt-4 border-t border-[#2B303B]">
                   <span className="flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[15px] text-verdigris">lock</span> 256-bit AES-GCM
+                    <span className="material-symbols-outlined text-[16px] text-[#6FA88C]">lock</span> 256-bit AES-GCM
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[15px] text-verdigris">memory</span> 0-Disk RAM Only
+                    <span className="material-symbols-outlined text-[16px] text-[#6FA88C]">memory</span> 0-Disk RAM Volatility
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[15px] text-verdigris">shield</span> Automatic PII Sanitization
+                    <span className="material-symbols-outlined text-[16px] text-[#6FA88C]">shield</span> PII Sanitized
                   </span>
                 </div>
               </div>
 
-              {/* HOW TO USE GUIDE CARD (with iLovePDF link) */}
+              {/* STEP-BY-STEP HOW-TO GUIDE (with iLovePDF link) */}
               <div className="lg:col-span-5 space-y-4">
-                <div className="glass-panel rounded-2xl p-6 md:p-7 space-y-5">
-                  <div className="flex items-center justify-between border-b border-hairline pb-3">
+                <div className="glass-panel rounded-3xl p-7 space-y-5">
+                  <div className="flex items-center justify-between border-b border-[#2B303B] pb-3">
                     <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-amber text-[20px]">help_outline</span>
-                      <h3 className="font-headline text-lg font-medium text-text-primary">How to Use</h3>
+                      <span className="material-symbols-outlined text-[#D99A4E] text-[20px]">help_outline</span>
+                      <h3 className="font-headline text-lg font-medium text-[#ECEEF3]">How to Use</h3>
                     </div>
-                    <span className="text-[11px] font-mono text-amber px-2.5 py-0.5 rounded-full bg-surface border border-hairline">
+                    <span className="text-[11px] font-mono text-[#D99A4E] px-2.5 py-0.5 rounded-full bg-[#181C25] border border-[#2B303B]">
                       3 quick steps
                     </span>
                   </div>
 
                   {/* Step 1: Unlock */}
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2.5 text-xs font-semibold text-text-primary">
-                      <span className="w-5 h-5 rounded-full bg-amber/20 text-amber border border-amber/40 flex items-center justify-center text-[11px] font-mono">1</span>
+                    <div className="flex items-center gap-2.5 text-xs font-semibold text-[#ECEEF3]">
+                      <span className="w-5 h-5 rounded-full bg-[#D99A4E]/20 text-[#D99A4E] border border-[#D99A4E]/40 flex items-center justify-center text-[11px] font-mono">1</span>
                       <span>Unlock Password-Protected PDF</span>
                     </div>
-                    <p className="text-xs text-text-muted pl-7 leading-relaxed">
+                    <p className="text-xs text-[#8A93A3] pl-7 leading-relaxed">
                       Bank statements (HDFC, ICICI, SBI, Axis, etc.) are protected with your password (DOB/PAN). Unlock it first before uploading:
                     </p>
                     <div className="pl-7 pt-1">
@@ -771,33 +822,33 @@ export default function App() {
                         href="https://www.ilovepdf.com/unlock_pdf"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-surface border border-hairline hover:border-amber text-xs font-medium text-amber hover:text-text-primary transition-all shadow-sm group"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#181C25] border border-[#2B303B] hover:border-[#D99A4E] text-xs font-medium text-[#D99A4E] hover:text-[#ECEEF3] transition-all shadow-md group"
                       >
-                        <span className="material-symbols-outlined text-[16px] text-amber group-hover:scale-110 transition-transform">lock_open</span>
+                        <span className="material-symbols-outlined text-[16px] text-[#D99A4E] group-hover:scale-110 transition-transform">lock_open</span>
                         <span>Unlock at iLovePDF.com</span>
-                        <span className="text-[10px] text-text-muted font-mono">↗</span>
+                        <span className="text-[10px] text-[#8A93A3] font-mono">↗</span>
                       </a>
                     </div>
                   </div>
 
                   {/* Step 2: Upload */}
-                  <div className="space-y-1.5 pt-3 border-t border-hairline/60">
-                    <div className="flex items-center gap-2.5 text-xs font-semibold text-text-primary">
-                      <span className="w-5 h-5 rounded-full bg-amber/20 text-amber border border-amber/40 flex items-center justify-center text-[11px] font-mono">2</span>
+                  <div className="space-y-1.5 pt-3 border-t border-[#2B303B]/60">
+                    <div className="flex items-center gap-2.5 text-xs font-semibold text-[#ECEEF3]">
+                      <span className="w-5 h-5 rounded-full bg-[#D99A4E]/20 text-[#D99A4E] border border-[#D99A4E]/40 flex items-center justify-center text-[11px] font-mono">2</span>
                       <span>Upload Unlocked PDF or CSV</span>
                     </div>
-                    <p className="text-xs text-text-muted pl-7 leading-relaxed">
+                    <p className="text-xs text-[#8A93A3] pl-7 leading-relaxed">
                       Drop your decrypted PDF or bank CSV directly into the workspace on the left.
                     </p>
                   </div>
 
                   {/* Step 3: Instant AI Audit */}
-                  <div className="space-y-1.5 pt-3 border-t border-hairline/60">
-                    <div className="flex items-center gap-2.5 text-xs font-semibold text-text-primary">
-                      <span className="w-5 h-5 rounded-full bg-amber/20 text-amber border border-amber/40 flex items-center justify-center text-[11px] font-mono">3</span>
+                  <div className="space-y-1.5 pt-3 border-t border-[#2B303B]/60">
+                    <div className="flex items-center gap-2.5 text-xs font-semibold text-[#ECEEF3]">
+                      <span className="w-5 h-5 rounded-full bg-[#D99A4E]/20 text-[#D99A4E] border border-[#D99A4E]/40 flex items-center justify-center text-[11px] font-mono">3</span>
                       <span>Get Instant Audit &amp; Savings</span>
                     </div>
-                    <p className="text-xs text-text-muted pl-7 leading-relaxed">
+                    <p className="text-xs text-[#8A93A3] pl-7 leading-relaxed">
                       Our neural engine isolates leaks against 45,000+ signatures and generates immediate cancellation playbooks.
                     </p>
                   </div>
@@ -806,17 +857,17 @@ export default function App() {
             </div>
 
             {/* 4 BANK-GRADE ENCRYPTION PILLARS */}
-            <div className="space-y-6 pt-6 border-t border-hairline">
+            <div className="space-y-6 pt-6 border-t border-[#2B303B]">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                  <h2 className="font-headline text-2xl font-normal text-text-primary">
+                  <h2 className="font-headline text-2xl font-normal text-[#ECEEF3]">
                     Bank-Grade Encryption &amp; Privacy Suite
                   </h2>
-                  <p className="text-xs text-text-muted">
+                  <p className="text-xs text-[#8A93A3]">
                     Why uploading your bank statement to StopTheDrip is 100% confidential and mathematically safe.
                   </p>
                 </div>
-                <div className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-surface border border-hairline rounded-full text-xs text-verdigris font-mono self-start sm:self-auto">
+                <div className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-[#181C25] border border-[#2B303B] rounded-full text-xs text-[#6FA88C] font-mono self-start sm:self-auto">
                   <span className="material-symbols-outlined text-[15px]">verified_user</span>
                   <span>zero-storage certified</span>
                 </div>
@@ -824,41 +875,41 @@ export default function App() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="glass-panel-interactive p-6 rounded-2xl space-y-3 group">
-                  <div className="w-10 h-10 rounded-xl bg-surface border border-hairline flex items-center justify-center text-amber group-hover:scale-110 transition-transform">
+                  <div className="w-10 h-10 rounded-xl bg-[#181C25] border border-[#2B303B] flex items-center justify-center text-[#D99A4E] group-hover:scale-110 transition-transform">
                     <span className="material-symbols-outlined text-[22px]">enhanced_encryption</span>
                   </div>
-                  <h3 className="text-sm font-semibold text-text-primary font-headline">In-Browser 256-Bit AES</h3>
-                  <p className="text-xs text-text-muted leading-relaxed">
+                  <h3 className="text-sm font-semibold text-[#ECEEF3] font-headline">In-Browser 256-Bit AES</h3>
+                  <p className="text-xs text-[#8A93A3] leading-relaxed">
                     Statements are encrypted in your browser memory via the native W3C Web Crypto API before transmission.
                   </p>
                 </div>
 
                 <div className="glass-panel-interactive p-6 rounded-2xl space-y-3 group">
-                  <div className="w-10 h-10 rounded-xl bg-surface border border-hairline flex items-center justify-center text-verdigris group-hover:scale-110 transition-transform">
+                  <div className="w-10 h-10 rounded-xl bg-[#181C25] border border-[#2B303B] flex items-center justify-center text-[#6FA88C] group-hover:scale-110 transition-transform">
                     <span className="material-symbols-outlined text-[22px]">memory</span>
                   </div>
-                  <h3 className="text-sm font-semibold text-text-primary font-headline">0-Disk RAM Volatility</h3>
-                  <p className="text-xs text-text-muted leading-relaxed">
+                  <h3 className="text-sm font-semibold text-[#ECEEF3] font-headline">0-Disk RAM Volatility</h3>
+                  <p className="text-xs text-[#8A93A3] leading-relaxed">
                     Zero database storage (no Postgres/MongoDB). Statements exist strictly as transient memory buffers and are purged immediately.
                   </p>
                 </div>
 
                 <div className="glass-panel-interactive p-6 rounded-2xl space-y-3 group">
-                  <div className="w-10 h-10 rounded-xl bg-surface border border-hairline flex items-center justify-center text-amber group-hover:scale-110 transition-transform">
+                  <div className="w-10 h-10 rounded-xl bg-[#181C25] border border-[#2B303B] flex items-center justify-center text-[#D99A4E] group-hover:scale-110 transition-transform">
                     <span className="material-symbols-outlined text-[22px]">shield</span>
                   </div>
-                  <h3 className="text-sm font-semibold text-text-primary font-headline">Automatic PII Scrubbing</h3>
-                  <p className="text-xs text-text-muted leading-relaxed">
+                  <h3 className="text-sm font-semibold text-[#ECEEF3] font-headline">Automatic PII Scrubbing</h3>
+                  <p className="text-xs text-[#8A93A3] leading-relaxed">
                     Account numbers, card details, balances, and customer names are stripped before AI merchant auditing.
                   </p>
                 </div>
 
                 <div className="glass-panel-interactive p-6 rounded-2xl space-y-3 group">
-                  <div className="w-10 h-10 rounded-xl bg-surface border border-hairline flex items-center justify-center text-verdigris group-hover:scale-110 transition-transform">
+                  <div className="w-10 h-10 rounded-xl bg-[#181C25] border border-[#2B303B] flex items-center justify-center text-[#6FA88C] group-hover:scale-110 transition-transform">
                     <span className="material-symbols-outlined text-[22px]">key</span>
                   </div>
-                  <h3 className="text-sm font-semibold text-text-primary font-headline">Ephemeral Session Keys</h3>
-                  <p className="text-xs text-text-muted leading-relaxed">
+                  <h3 className="text-sm font-semibold text-[#ECEEF3] font-headline">Ephemeral Session Keys</h3>
+                  <p className="text-xs text-[#8A93A3] leading-relaxed">
                     One-time 96-bit nonces and throwaway encryption keys are generated per audit and permanently destroyed upon report delivery.
                   </p>
                 </div>
@@ -872,39 +923,39 @@ export default function App() {
         {/* ========================================================= */}
         {currentState === 'analyzing' && (
           <section className="flex flex-col justify-center min-h-[500px] transition-all duration-300">
-            <div className="max-w-xl mx-auto w-full glass-panel rounded-2xl p-8 md:p-12 space-y-8 shadow-2xl">
+            <div className="max-w-xl mx-auto w-full glass-panel rounded-3xl p-8 md:p-12 space-y-8 shadow-2xl gradient-border-glow">
               <div className="space-y-3">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-surface border border-hairline rounded-full text-xs text-amber font-mono">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber animate-ping"></span>
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#181C25] border border-[#2B303B] rounded-full text-xs text-[#D99A4E] font-mono">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#D99A4E] animate-ping"></span>
                   <span>analyzing statement</span>
                 </div>
-                <h2 className="text-3xl font-headline font-normal text-text-primary">
+                <h2 className="text-3xl font-headline font-normal text-[#ECEEF3]">
                   {loadingTitle}
                 </h2>
-                <p className="text-xs text-text-muted font-mono">
+                <p className="text-xs text-[#8A93A3] font-mono">
                   {loadingDesc}
                 </p>
               </div>
 
               {/* Scanning Pulse Bar */}
-              <div className="w-full h-1 bg-hairline rounded-full relative overflow-hidden">
-                <div className="absolute inset-y-0 w-1/3 bg-amber animate-[pulse_1s_infinite] rounded-full"></div>
+              <div className="w-full h-1.5 bg-[#2B303B] rounded-full relative overflow-hidden">
+                <div className="absolute inset-y-0 w-1/3 bg-[#D99A4E] animate-[pulse_1s_infinite] rounded-full shadow-[0_0_12px_#D99A4E]"></div>
               </div>
 
               {/* Telemetry Stage Indicators */}
-              <div className="space-y-4 border-l border-hairline pl-5 ml-1">
-                <div className={`flex items-center gap-3 text-xs font-mono transition-colors ${analyzingStep >= 1 ? 'text-verdigris font-medium' : 'text-text-muted'}`}>
+              <div className="space-y-4 border-l border-[#2B303B] pl-5 ml-1">
+                <div className={`flex items-center gap-3 text-xs font-mono transition-colors ${analyzingStep >= 1 ? 'text-[#6FA88C] font-medium' : 'text-[#8A93A3]'}`}>
                   <span className="material-symbols-outlined text-[16px]">check_circle</span>
                   <span>Ingesting in-memory structure &amp; parsing dates</span>
                 </div>
-                <div className={`flex items-center gap-3 text-xs font-mono transition-colors ${analyzingStep >= 2 ? 'text-verdigris font-medium' : 'text-text-muted'}`}>
-                  <span className={`material-symbols-outlined text-[16px] ${analyzingStep >= 2 ? 'text-verdigris' : 'text-hairline'}`}>
+                <div className={`flex items-center gap-3 text-xs font-mono transition-colors ${analyzingStep >= 2 ? 'text-[#6FA88C] font-medium' : 'text-[#8A93A3]'}`}>
+                  <span className={`material-symbols-outlined text-[16px] ${analyzingStep >= 2 ? 'text-[#6FA88C]' : 'text-[#2B303B]'}`}>
                     {analyzingStep >= 2 ? 'check_circle' : 'radio_button_unchecked'}
                   </span>
                   <span>Isolating recurring card charges &amp; digital wallets</span>
                 </div>
-                <div className={`flex items-center gap-3 text-xs font-mono transition-colors ${analyzingStep >= 3 ? 'text-verdigris font-medium' : 'text-text-muted'}`}>
-                  <span className={`material-symbols-outlined text-[16px] ${analyzingStep >= 3 ? 'text-verdigris' : 'text-hairline'}`}>
+                <div className={`flex items-center gap-3 text-xs font-mono transition-colors ${analyzingStep >= 3 ? 'text-[#6FA88C] font-medium' : 'text-[#8A93A3]'}`}>
+                  <span className={`material-symbols-outlined text-[16px] ${analyzingStep >= 3 ? 'text-[#6FA88C]' : 'text-[#2B303B]'}`}>
                     {analyzingStep >= 3 ? 'check_circle' : 'radio_button_unchecked'}
                   </span>
                   <span>Dual-Agent classification &amp; savings compounding</span>
@@ -920,20 +971,20 @@ export default function App() {
         {currentState === 'results' && (
           <section className="space-y-12 animate-in fade-in duration-500">
             {/* AUDIT SUMMARY HERO BANNER */}
-            <div className="glass-panel rounded-2xl p-8 md:p-12 space-y-8 shadow-2xl">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-hairline pb-6">
+            <div className="glass-panel rounded-3xl p-8 md:p-12 space-y-8 shadow-2xl gradient-border-glow">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#2B303B] pb-6">
                 <div>
-                  <div className="flex items-center gap-2 text-xs font-mono text-verdigris">
-                    <span className="w-2 h-2 rounded-full bg-verdigris animate-pulse"></span>
+                  <div className="flex items-center gap-2 text-xs font-mono text-[#6FA88C]">
+                    <span className="w-2 h-2 rounded-full bg-[#6FA88C] animate-pulse"></span>
                     <span>Audit Complete • {resultsData.leak_vectors?.length || 5} Leaks Identified</span>
                   </div>
-                  <h1 className="text-3xl md:text-5xl font-headline font-normal text-text-primary mt-2">
+                  <h1 className="text-3xl md:text-5xl font-headline font-normal text-[#ECEEF3] mt-2">
                     Autonomous Leak Ledger
                   </h1>
                 </div>
                 <button
                   onClick={() => switchState('upload')}
-                  className="px-4 py-2 rounded-xl bg-surface border border-hairline hover:border-amber text-xs text-text-primary transition-all self-start md:self-auto"
+                  className="px-5 py-2.5 rounded-xl bg-[#181C25] border border-[#2B303B] hover:border-[#D99A4E] text-xs text-[#ECEEF3] transition-all self-start md:self-auto shadow-sm"
                 >
                   Upload Another Statement
                 </button>
@@ -941,51 +992,109 @@ export default function App() {
 
               {/* Three Big Health Score KPI Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="p-6 rounded-2xl bg-surface/80 border border-hairline space-y-2">
-                  <div className="text-xs font-mono text-text-muted uppercase">Monthly Leak Rate</div>
-                  <div className="text-3xl md:text-4xl font-headline text-amber">
-                    ₹{(resultsData.total_monthly_leak || 1539).toLocaleString()} <span className="text-sm font-sans text-text-muted">/mo</span>
+                <div className="p-6 rounded-2xl bg-[#181C25]/80 border border-[#2B303B] space-y-2">
+                  <div className="text-xs font-mono text-[#8A93A3] uppercase">Monthly Leak Rate</div>
+                  <div className="text-3xl md:text-4xl font-headline text-[#D99A4E]">
+                    ₹{(resultsData.total_monthly_leak || 1539).toLocaleString()} <span className="text-sm font-sans text-[#8A93A3]">/mo</span>
                   </div>
-                  <p className="text-xs text-text-muted">Unclaimed subscription recurring charges</p>
+                  <p className="text-xs text-[#8A93A3]">Unclaimed subscription recurring charges</p>
                 </div>
 
-                <div className="p-6 rounded-2xl bg-surface/80 border border-hairline space-y-2">
-                  <div className="text-xs font-mono text-text-muted uppercase">Annual Compound Loss</div>
-                  <div className="text-3xl md:text-4xl font-headline text-text-primary">
-                    ₹{(resultsData.total_annual_leak || 18468).toLocaleString()} <span className="text-sm font-sans text-text-muted">/yr</span>
+                <div className="p-6 rounded-2xl bg-[#181C25]/80 border border-[#2B303B] space-y-2">
+                  <div className="text-xs font-mono text-[#8A93A3] uppercase">Annual Compound Loss</div>
+                  <div className="text-3xl md:text-4xl font-headline text-[#ECEEF3]">
+                    ₹{(resultsData.total_annual_leak || 18468).toLocaleString()} <span className="text-sm font-sans text-[#8A93A3]">/yr</span>
                   </div>
-                  <p className="text-xs text-text-muted">Projected financial drag over 12 months</p>
+                  <p className="text-xs text-[#8A93A3]">Projected financial drag over 12 months</p>
                 </div>
 
-                <div className="p-6 rounded-2xl bg-surface/80 border border-hairline space-y-2">
-                  <div className="text-xs font-mono text-text-muted uppercase">Instant Recovery Savings</div>
-                  <div className="text-3xl md:text-4xl font-headline text-verdigris">
-                    ₹{(resultsData.potential_annual_savings || 12576).toLocaleString()} <span className="text-sm font-sans text-text-muted">/yr</span>
+                <div className="p-6 rounded-2xl bg-[#181C25]/80 border border-[#2B303B] space-y-2">
+                  <div className="text-xs font-mono text-[#8A93A3] uppercase">Instant Recovery Savings</div>
+                  <div className="text-3xl md:text-4xl font-headline text-[#6FA88C]">
+                    ₹{(resultsData.potential_annual_savings || 12576).toLocaleString()} <span className="text-sm font-sans text-[#8A93A3]">/yr</span>
                   </div>
-                  <p className="text-xs text-text-muted">Recoverable with zero loss in daily productivity</p>
+                  <p className="text-xs text-[#8A93A3]">Recoverable with zero loss in daily productivity</p>
+                </div>
+              </div>
+
+              {/* WEALTH COMPOUNDING SIMULATOR */}
+              <div className="p-6 rounded-2xl bg-[#12151C]/90 border border-[#2B303B] space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <span className="text-xs font-mono text-[#D99A4E] uppercase tracking-wider block">Financial Impact Simulation</span>
+                    <h3 className="font-headline text-lg text-[#ECEEF3]">
+                      What happens if you plug these leaks today?
+                    </h3>
+                  </div>
+                  {/* Time Horizon Pills */}
+                  <div className="flex items-center gap-1.5 p-1 bg-[#181C25] rounded-xl border border-[#2B303B] self-start sm:self-auto">
+                    {[1, 3, 5].map((yr) => (
+                      <button
+                        key={yr}
+                        onClick={() => setSimulationHorizon(yr)}
+                        className={`px-3 py-1 rounded-lg text-xs font-mono transition-all ${
+                          simulationHorizon === yr ? 'bg-[#D99A4E] text-[#12151C] font-semibold' : 'text-[#8A93A3] hover:text-[#ECEEF3]'
+                        }`}
+                      >
+                        {yr} {yr === 1 ? 'Year' : 'Years'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                  <div className="p-4 rounded-xl bg-[#181C25] border border-[#FF6B6B]/30 space-y-1">
+                    <span className="text-[11px] font-mono text-[#FF6B6B] uppercase">Cumulative Money Lost if Untouched</span>
+                    <div className="text-2xl font-headline text-[#ECEEF3]">
+                      ₹{((resultsData.total_annual_leak || 18468) * simulationHorizon).toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="p-4 rounded-xl bg-[#181C25] border border-[#6FA88C]/30 space-y-1">
+                    <span className="text-[11px] font-mono text-[#6FA88C] uppercase">Compounded Wealth Saved &amp; Re-invested</span>
+                    <div className="text-2xl font-headline text-[#6FA88C]">
+                      ₹{Math.round((resultsData.potential_annual_savings || 12576) * simulationHorizon * (1 + 0.08 * simulationHorizon)).toLocaleString()}
+                      <span className="text-xs font-sans text-[#8A93A3] ml-1.5 font-normal">(@8% return)</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* AUDIT DETAILS: 2 COLUMN SPLIT */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-              {/* LEFT 7 COLS: EXPANDABLE LEAK VECTOR ROWS */}
+              {/* LEFT 7 COLS: FILTERABLE EXPANDABLE LEAK ROWS */}
               <div className="lg:col-span-7 space-y-4">
-                <div className="flex items-center justify-between pb-2 border-b border-hairline">
-                  <h3 className="font-headline text-xl font-normal text-text-primary">
-                    Detected Leak Vectors ({resultsData.leak_vectors?.length || 0})
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#2B303B]">
+                  <h3 className="font-headline text-xl font-normal text-[#ECEEF3]">
+                    Detected Leak Vectors
                   </h3>
-                  <span className="text-xs font-mono text-text-muted">click item to expand playbook</span>
+
+                  {/* Filter Pills */}
+                  <div className="flex items-center gap-1.5">
+                    {['All', 'Forgotten', 'Active'].map((tag) => (
+                      <button
+                        key={tag}
+                        onClick={() => setFilterTag(tag)}
+                        className={`px-3 py-1 rounded-full text-xs font-mono transition-all ${
+                          filterTag === tag
+                            ? 'bg-[#D99A4E] text-[#12151C] font-semibold'
+                            : 'bg-[#181C25] text-[#8A93A3] border border-[#2B303B] hover:text-[#ECEEF3]'
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="space-y-3">
-                  {resultsData.leak_vectors?.map((item) => {
+                  {filteredLeaks.map((item) => {
                     const isOpen = Boolean(openAccordions[item.id])
                     return (
                       <div
                         key={item.id}
                         className={`glass-panel rounded-2xl transition-all overflow-hidden ${
-                          isOpen ? 'border-amber/60 shadow-lg' : 'hover:border-hairline'
+                          isOpen ? 'border-[#D99A4E]/60 shadow-xl' : 'hover:border-[#2B303B]'
                         }`}
                       >
                         <button
@@ -994,36 +1103,36 @@ export default function App() {
                         >
                           <div className="space-y-1">
                             <div className="flex items-center gap-2.5">
-                              <span className="font-headline text-lg text-text-primary font-normal">
+                              <span className="font-headline text-lg text-[#ECEEF3] font-normal">
                                 {item.friendly_name || item.merchant}
                               </span>
                               <span
                                 className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${
                                   item.tag === 'Forgotten'
-                                    ? 'bg-amber/10 text-amber border-amber/30'
-                                    : 'bg-verdigris/10 text-verdigris border-verdigris/30'
+                                    ? 'bg-[#D99A4E]/10 text-[#D99A4E] border-[#D99A4E]/30'
+                                    : 'bg-[#6FA88C]/10 text-[#6FA88C] border-[#6FA88C]/30'
                                 }`}
                               >
                                 {item.tag || 'Active'}
                               </span>
                             </div>
-                            <p className="text-xs text-text-muted">
+                            <p className="text-xs text-[#8A93A3]">
                               {item.subtitle || `Recurring subscription • ${Math.round((item.confidence || 0.9) * 100)}% confidence`}
                             </p>
                           </div>
 
                           <div className="flex items-center gap-4 text-right">
                             <div>
-                              <div className="text-sm font-semibold text-amber font-mono">
+                              <div className="text-sm font-semibold text-[#D99A4E] font-mono">
                                 ₹{(item.monthly_amount || 0).toLocaleString()} /mo
                               </div>
-                              <div className="text-[11px] text-text-muted font-mono">
+                              <div className="text-[11px] text-[#8A93A3] font-mono">
                                 ₹{(item.annual_amount || item.monthly_amount * 12 || 0).toLocaleString()} /yr
                               </div>
                             </div>
                             <span
-                              className={`text-text-muted text-lg transition-transform duration-200 ${
-                                isOpen ? 'rotate-45 text-amber' : ''
+                              className={`text-[#8A93A3] text-lg transition-transform duration-200 ${
+                                isOpen ? 'rotate-45 text-[#D99A4E]' : ''
                               }`}
                             >
                               +
@@ -1033,17 +1142,17 @@ export default function App() {
 
                         {/* Expandable Step-by-Step Playbook */}
                         {isOpen && (
-                          <div className="px-5 pb-5 pt-1 border-t border-hairline/60 space-y-4 text-xs animate-in fade-in">
-                            <p className="text-text-muted leading-relaxed">
+                          <div className="px-5 pb-5 pt-1 border-t border-[#2B303B]/60 space-y-4 text-xs animate-in fade-in">
+                            <p className="text-[#8A93A3] leading-relaxed">
                               {item.description}
                             </p>
 
                             {item.steps && item.steps.length > 0 && (
-                              <div className="space-y-2 bg-surface/60 p-4 rounded-xl border border-hairline/60">
-                                <span className="font-mono text-amber text-[11px] uppercase tracking-wider block">
+                              <div className="space-y-2 bg-[#181C25]/80 p-4 rounded-xl border border-[#2B303B]">
+                                <span className="font-mono text-[#D99A4E] text-[11px] uppercase tracking-wider block">
                                   1-Click Cancellation Pathway:
                                 </span>
-                                <ol className="space-y-1.5 list-decimal list-inside text-text-primary">
+                                <ol className="space-y-1.5 list-decimal list-inside text-[#ECEEF3]">
                                   {item.steps.map((s, idx) => (
                                     <li key={idx} className="leading-relaxed">{s}</li>
                                   ))}
@@ -1052,7 +1161,7 @@ export default function App() {
                             )}
 
                             {item.note && (
-                              <div className="flex items-center gap-2 text-[11px] text-verdigris font-mono">
+                              <div className="flex items-center gap-2 text-[11px] text-[#6FA88C] font-mono">
                                 <span className="material-symbols-outlined text-[16px]">info</span>
                                 <span>{item.note}</span>
                               </div>
@@ -1067,9 +1176,9 @@ export default function App() {
 
               {/* RIGHT 5 COLS: SPEND BREAKDOWN & EXPORT */}
               <div className="lg:col-span-5 space-y-6">
-                <div className="glass-panel rounded-2xl p-6 space-y-6">
-                  <div className="pb-3 border-b border-hairline">
-                    <h3 className="font-headline text-xl font-normal text-text-primary">
+                <div className="glass-panel rounded-3xl p-7 space-y-6">
+                  <div className="pb-3 border-b border-[#2B303B]">
+                    <h3 className="font-headline text-xl font-normal text-[#ECEEF3]">
                       Spend by Category
                     </h3>
                   </div>
@@ -1079,14 +1188,14 @@ export default function App() {
                     {resultsData.spend_by_category?.map((cat, idx) => (
                       <div key={idx} className="space-y-1.5">
                         <div className="flex justify-between text-xs">
-                          <span className="text-text-primary font-medium">{cat.name}</span>
-                          <span className="text-text-muted font-mono">
+                          <span className="text-[#ECEEF3] font-medium">{cat.name}</span>
+                          <span className="text-[#8A93A3] font-mono">
                             ₹{(cat.monthly_amount || 0).toLocaleString()} /mo ({cat.percentage}%)
                           </span>
                         </div>
-                        <div className="w-full h-2 rounded-full bg-surface overflow-hidden border border-hairline/60">
+                        <div className="w-full h-2 rounded-full bg-[#12151C] overflow-hidden border border-[#2B303B]">
                           <div
-                            className="bg-verdigris h-full rounded-full transition-all duration-700"
+                            className="bg-[#6FA88C] h-full rounded-full transition-all duration-700"
                             style={{ width: `${cat.bar_width_pct || cat.percentage}%` }}
                           ></div>
                         </div>
@@ -1095,30 +1204,30 @@ export default function App() {
                   </div>
 
                   {resultsData.optimization_callout && (
-                    <div className="p-4 rounded-xl bg-surface border border-hairline text-xs text-text-muted flex gap-3 leading-relaxed">
-                      <span className="material-symbols-outlined text-amber text-[20px] flex-shrink-0">lightbulb</span>
+                    <div className="p-4 rounded-2xl bg-[#181C25] border border-[#2B303B] text-xs text-[#8A93A3] flex gap-3 leading-relaxed">
+                      <span className="material-symbols-outlined text-[#D99A4E] text-[20px] flex-shrink-0">lightbulb</span>
                       <p>{resultsData.optimization_callout}</p>
                     </div>
                   )}
 
                   {/* Export Dossier */}
-                  <div className="pt-4 border-t border-hairline space-y-3">
-                    <h4 className="font-headline text-base font-normal text-text-primary">
+                  <div className="pt-4 border-t border-[#2B303B] space-y-3">
+                    <h4 className="font-headline text-base font-normal text-[#ECEEF3]">
                       Export Audit Dossier
                     </h4>
-                    <p className="text-xs text-text-muted">
+                    <p className="text-xs text-[#8A93A3]">
                       Download a clean CSV summary or print an encrypted report.
                     </p>
                     <div className="grid grid-cols-2 gap-3 pt-1">
                       <button
                         onClick={handleExportCSV}
-                        className="px-4 py-2.5 rounded-xl bg-surface border border-hairline hover:border-amber text-xs font-semibold text-text-primary transition-all"
+                        className="px-4 py-3 rounded-xl bg-[#181C25] border border-[#2B303B] hover:border-[#D99A4E] text-xs font-semibold text-[#ECEEF3] transition-all"
                       >
                         Export CSV
                       </button>
                       <button
-                        onClick={handleExportPDF}
-                        className="px-4 py-2.5 rounded-xl bg-amber text-ink text-xs font-semibold hover:bg-amber/90 transition-all"
+                        onClick={() => window.print()}
+                        className="shimmer-btn px-4 py-3 rounded-xl text-[#12151C] text-xs font-semibold transition-all"
                       >
                         Export PDF
                       </button>
@@ -1131,47 +1240,47 @@ export default function App() {
         )}
       </main>
 
-      {/* FOOTER */}
-      <footer className="w-full border-t border-hairline bg-ink mt-auto py-10">
-        <div className="max-w-7xl mx-auto px-6 md:px-12 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-text-muted font-mono">
+      {/* LUXURY FOOTER */}
+      <footer className="w-full border-t border-[#2B303B] bg-[#0E1117] mt-auto py-12">
+        <div className="max-w-7xl mx-auto px-6 md:px-12 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#8A93A3] font-mono">
           <div className="flex items-center gap-2">
             <span>© StopTheDrip Financial Clarity</span>
             <span>•</span>
-            <span className="text-verdigris">Zero Data Storage</span>
+            <span className="text-[#6FA88C]">Zero Data Storage</span>
           </div>
           <div className="flex gap-6">
-            <a className="hover:text-text-primary transition-colors" href="https://www.ilovepdf.com/unlock_pdf" target="_blank" rel="noopener noreferrer">iLovePDF Unlocker</a>
-            <a className="hover:text-text-primary transition-colors" href="#">Privacy Suite</a>
-            <a className="hover:text-text-primary transition-colors" href="#">Security Specs</a>
+            <a className="hover:text-[#ECEEF3] transition-colors" href="https://www.ilovepdf.com/unlock_pdf" target="_blank" rel="noopener noreferrer">iLovePDF Unlocker</a>
+            <a className="hover:text-[#ECEEF3] transition-colors" href="#">Privacy Suite</a>
+            <a className="hover:text-[#ECEEF3] transition-colors" href="#">Security Specs</a>
           </div>
         </div>
       </footer>
 
       {/* FIREBASE CONFIG HELP MODAL */}
       {showConfigHelp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in">
-          <div className="glass-panel rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border-amber/40">
-            <div className="flex items-center justify-between border-b border-hairline pb-3">
-              <div className="flex items-center gap-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xl p-4 animate-in fade-in">
+          <div className="glass-panel rounded-3xl max-w-md w-full p-6 md:p-8 shadow-2xl space-y-5 border-[#D99A4E]/50">
+            <div className="flex items-center justify-between border-b border-[#2B303B] pb-3">
+              <div className="flex items-center gap-2.5">
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.9c2.28-2.1 3.64-5.2 3.64-9.15z"/>
                   <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.9-3.05c-1.08.72-2.45 1.16-4.03 1.16-3.1 0-5.73-2.09-6.67-4.91H1.27v3.14C3.25 21.36 7.31 24 12 24z"/>
                   <path fill="#FBBC05" d="M5.33 14.29c-.24-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.57H1.27C.46 8.19 0 10.03 0 12s.46 3.81 1.27 5.43l4.06-3.14z"/>
                   <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.64 1.27 6.57l4.06 3.14c.94-2.82 3.57-4.96 6.67-4.96z"/>
                 </svg>
-                <h3 className="font-headline text-lg font-medium text-text-primary">Google SSO Configuration</h3>
+                <h3 className="font-headline text-lg font-medium text-[#ECEEF3]">Google SSO Configuration</h3>
               </div>
               <button 
                 onClick={() => setShowConfigHelp(false)}
-                className="text-text-muted hover:text-text-primary text-sm p-1"
+                className="text-[#8A93A3] hover:text-[#ECEEF3] text-sm p-1"
               >
                 ✕
               </button>
             </div>
-            <p className="text-xs text-text-muted leading-relaxed">
-              Google SSO is fully ready. To connect your Firebase project, set these variables in your <code className="text-amber font-mono">.env</code> or Vercel Environment Variables:
+            <p className="text-xs text-[#8A93A3] leading-relaxed">
+              Google SSO is fully ready. To connect your Firebase project, set these variables in your <code className="text-[#D99A4E] font-mono">.env</code> or Vercel Environment Variables:
             </p>
-            <div className="bg-ink p-3.5 rounded-xl border border-hairline font-mono text-[11px] text-amber space-y-1 overflow-x-auto">
+            <div className="bg-[#0E1117] p-4 rounded-2xl border border-[#2B303B] font-mono text-[11px] text-[#D99A4E] space-y-1 overflow-x-auto">
               <div>VITE_FIREBASE_API_KEY=...</div>
               <div>VITE_FIREBASE_AUTH_DOMAIN=...</div>
               <div>VITE_FIREBASE_PROJECT_ID=...</div>
@@ -1181,7 +1290,7 @@ export default function App() {
             </div>
             <button
               onClick={() => setShowConfigHelp(false)}
-              className="w-full py-2.5 bg-amber text-ink rounded-xl text-xs font-semibold hover:bg-amber/90 transition-colors"
+              className="shimmer-btn w-full py-3 text-[#12151C] rounded-2xl text-xs font-semibold"
             >
               Got it
             </button>
