@@ -5,6 +5,7 @@
 
 [![Live Web App](https://img.shields.io/badge/Live_App-heharsh123.vercel.app-success?style=for-the-badge&logo=vercel)](https://heharsh123.vercel.app/#)
 [![Live Backend API](https://img.shields.io/badge/Backend_API-hyu--3lqa.onrender.com-blue?style=for-the-badge&logo=render)](https://hyu-3lqa.onrender.com/)
+[![Watch Video Demo](https://img.shields.io/badge/▶️_Video_Demo-Google_Drive-FF5722?style=for-the-badge&logo=google-drive&logoColor=white)](https://drive.google.com/file/d/1g75rH4UzywVNArIYnFHEPSW-IkmzkkDl/view?usp=sharing)
 [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
 [![Three.js](https://img.shields.io/badge/Three.js-black?style=for-the-badge&logo=three.js&logoColor=white)](https://threejs.org/)
@@ -21,6 +22,7 @@
 ### 🚀 **Main Web Application**: [https://heharsh123.vercel.app/#](https://heharsh123.vercel.app/#)
 ### ⚡ **Live Backend API**: [https://hyu-3lqa.onrender.com/](https://hyu-3lqa.onrender.com/)
 ### 📚 **Interactive API Docs (Swagger)**: [https://hyu-3lqa.onrender.com/docs](https://hyu-3lqa.onrender.com/docs)
+### 🎬 **Video Demo Walkthrough**: [https://drive.google.com/file/d/1g75rH4UzywVNArIYnFHEPSW-IkmzkkDl/view?usp=sharing](https://drive.google.com/file/d/1g75rH4UzywVNArIYnFHEPSW-IkmzkkDl/view?usp=sharing)
 
 </div>
 
@@ -30,6 +32,31 @@
 
 # 👨‍💻 MADE BY HARSHIL GOYAL
 ### 📧 **Email:** [arveharshil@gmail.com](mailto:arveharshil@gmail.com)
+
+</div>
+
+---
+
+## 🎥 Video Demonstration & Walkthrough
+
+<div align="center">
+
+[![Watch the StopTheDrip Video Demo](https://img.shields.io/badge/▶️%20CLICK%20TO%20WATCH%20FULL%20DEMO%20VIDEO%20ON%20GOOGLE%20DRIVE-4285F4?style=for-the-badge&logo=googledrive&logoColor=white)](https://drive.google.com/file/d/1g75rH4UzywVNArIYnFHEPSW-IkmzkkDl/view?usp=sharing)
+
+<br /><br />
+
+<details>
+<summary><b>🎬 [Click to Expand / Pop Up Video Link & Details]</b></summary>
+
+<br />
+
+> ### 📺 Watch Video Demo:
+> 👉 **[Click here to play the full Walkthrough Video on Google Drive](https://drive.google.com/file/d/1g75rH4UzywVNArIYnFHEPSW-IkmzkkDl/view?usp=sharing)**
+> 
+> * **Video Link**: `https://drive.google.com/file/d/1g75rH4UzywVNArIYnFHEPSW-IkmzkkDl/view?usp=sharing`
+> * **Includes**: Full walkthrough of 3D Three.js leak animation, in-browser 256-bit AES encryption, statement upload, password unlock workflow with iLovePDF, Firebase Google SSO, and autonomous financial leak audit report generation.
+
+</details>
 
 </div>
 
