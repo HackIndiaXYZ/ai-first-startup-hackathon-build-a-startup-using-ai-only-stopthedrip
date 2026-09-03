@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { encryptStatementBuffer } from './crypto'
 import { signInWithGoogle, logOut, subscribeToAuthChanges, isFirebaseConfigured } from './firebase'
+import StopTheDripHero from './components/StopTheDripHero'
 
 const API_BASE_URL = (import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
 
@@ -327,11 +328,28 @@ export default function App() {
               <span>system active</span>
             </div>
           </div>
-          <nav className="hidden md:flex items-center gap-8 text-sm font-normal text-on-surface-variant">
-            <a className="text-on font-medium" href="#">Dashboard</a>
-            <a className="hover:text-on transition-colors" href="#">Leak vectors</a>
-            <a className="hover:text-on transition-colors" href="#">Audit timeline</a>
-            <a className="hover:text-on transition-colors" href="#">Settings</a>
+          <nav className="hidden md:flex items-center gap-6 text-sm font-normal text-on-surface-variant">
+            <button 
+              onClick={() => switchState('hero')}
+              className={`px-3 py-1 rounded-full text-xs transition-colors flex items-center gap-1.5 ${
+                currentState === 'hero' ? 'bg-primary/20 text-primary border border-primary/40' : 'hover:text-on'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[14px]">view_in_ar</span>
+              <span>3D Drip Visualizer</span>
+            </button>
+            <button 
+              onClick={() => switchState('upload')}
+              className={`hover:text-on transition-colors ${currentState === 'upload' ? 'text-on font-medium' : ''}`}
+            >
+              Audit Statement
+            </button>
+            <button 
+              onClick={() => switchState('results')}
+              className={`hover:text-on transition-colors ${currentState === 'results' ? 'text-on font-medium' : ''}`}
+            >
+              Leak Vectors
+            </button>
           </nav>
           <div className="flex items-center gap-3">
             {currentUser ? (
@@ -397,7 +415,15 @@ export default function App() {
       <main className="flex-1 w-full max-w-6xl mx-auto px-6 md:px-12 py-12 md:py-20">
         {/* REVIEWER CONTROLS */}
         <aside aria-label="Reviewer Controls" className="fixed bottom-6 right-6 z-50 flex items-center gap-2 p-1.5 bg-surface-container border border-outline rounded-lg shadow-sm">
-          <span className="text-xs text-on-surface-variant px-2 font-mono">State:</span>
+          <span className="text-xs text-on-surface-variant px-2 font-mono">View:</span>
+          <button
+            className={`px-2.5 py-1 rounded text-xs transition-all ${
+              currentState === 'hero' ? 'bg-primary text-on-primary font-medium' : 'text-on-surface-variant hover:text-on'
+            }`}
+            onClick={() => switchState('hero')}
+          >
+            0. 3D visual
+          </button>
           <button
             className={`px-2.5 py-1 rounded text-xs transition-all ${
               currentState === 'upload' ? 'bg-primary text-on-primary font-medium' : 'text-on-surface-variant hover:text-on'
@@ -426,6 +452,25 @@ export default function App() {
             3. results
           </button>
         </aside>
+
+        {/* STATE 0: 3D HERO VISUALIZER */}
+        {currentState === 'hero' && (
+          <section className="space-y-6 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-mono text-primary">3D Realtime WebGL Leak Visualizer</span>
+              <button
+                onClick={() => switchState('upload')}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-on-primary text-xs font-medium hover:bg-primary/90 transition-all shadow-sm active:scale-95"
+              >
+                <span>Audit My Bank Statement</span>
+                <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+              </button>
+            </div>
+            <div className="rounded-2xl border border-outline overflow-hidden shadow-2xl bg-[#12151C]">
+              <StopTheDripHero />
+            </div>
+          </section>
+        )}
 
         {/* STATE 1: UPLOAD */}
         {currentState === 'upload' && (
