@@ -1,459 +1,109 @@
-import React, { useEffect, useRef, useState } from "react";
-import * as THREE from "three";
+<div align="center">
 
-/*
-  StopTheDrip — hero + audit ledger
-  Design tokens
-  color:   ink #12151C, surface #181C25, hairline #2B303B,
-           text-primary #ECEEF3, text-muted #8A93A3,
-           verdigris (oxidized copper — leak/flow) #6FA88C,
-           amber (leak amount) #D99A4E
-  type:    Newsreader (serif, headline) / Inter (data, body)
-  layout:  left-aligned ledger, asymmetric hero split
-*/
+# 💧 StopTheDrip
+### Autonomous Recurring Subscription Leak Detection & Financial Clarity Engine
 
-const CATEGORIES = [
-  { name: "Streaming", amount: 41.97, of: 128.4 },
-  { name: "Software", amount: 34.98, of: 128.4 },
-  { name: "Fitness", amount: 29.99, of: 128.4 },
-  { name: "Cloud storage", amount: 21.46, of: 128.4 },
-];
+[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![Three.js](https://img.shields.io/badge/Three.js-black?style=for-the-badge&logo=three.js&logoColor=white)](https://threejs.org/)
+[![Firebase SSO](https://img.shields.io/badge/Firebase_Auth-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
+[![AES-256-GCM](https://img.shields.io/badge/Security-256--bit_AES--GCM-4CAF50?style=for-the-badge)](https://en.wikipedia.org/wiki/Galois/Counter_Mode)
+[![Zero-Storage](https://img.shields.io/badge/Storage-0--Disk_RAM--Only-blue?style=for-the-badge)]()
 
-const LEDGER = [
-  {
-    merchant: "Vidstream Plus",
-    amount: 15.99,
-    cadence: "monthly",
-    kind: "subscription",
-    confidence: 0.96,
-    note: "Last opened 4 months ago.",
-    steps: [
-      "Open Vidstream Plus, go to Account settings.",
-      "Select Membership, then Cancel membership.",
-      "Confirm — access continues until the period ends.",
-    ],
-  },
-  {
-    merchant: "CloudVault Pro",
-    amount: 9.99,
-    cadence: "monthly",
-    kind: "subscription",
-    confidence: 0.91,
-    note: "Storage usage is under 2% of plan.",
-    steps: [
-      "Sign in to CloudVault, open Billing.",
-      "Choose Downgrade plan or Cancel subscription.",
-      "Export any files you want to keep first.",
-    ],
-  },
-  {
-    merchant: "FitTrack Studio",
-    amount: 29.99,
-    cadence: "monthly",
-    kind: "subscription",
-    confidence: 0.88,
-    note: "No check-ins recorded in 11 weeks.",
-    steps: [
-      "Open the FitTrack app, tap your profile icon.",
-      "Go to Subscription, then Manage plan.",
-      "Tap Cancel plan and confirm.",
-    ],
-  },
-];
+**StopTheDrip** audits bank statements (PDF/CSV) to uncover forgotten subscriptions, hidden price hikes, and dormant capital leaks with zero disk storage and client-side hardware encryption.
 
-function formatUSD(n) {
-  return n.toLocaleString("en-US", { style: "currency", currency: "USD" });
-}
+</div>
 
-function DripCanvas() {
-  const mountRef = useRef(null);
+---
 
-  useEffect(() => {
-    const mount = mountRef.current;
-    const width = mount.clientWidth;
-    const height = mount.clientHeight;
+## 🌟 Key Features
 
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 100);
-    camera.position.set(0, 0.6, 6.2);
+### 💧 1. 3D Interactive Three.js Leak Visualization
+* Real-time WebGL rendering showing your money dripping through a mechanical pipe joint.
+* Visualizes real-time recurring leakage velocity and annual compounding loss before/after cancellation.
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    mount.appendChild(renderer.domElement);
+### 🔐 2. Bank-Grade 256-Bit AES-GCM Zero-Storage Encryption
+* **Client-Side Encryption**: Uses native W3C Web Crypto API (`window.crypto.subtle`) in the browser before any bytes leave your machine.
+* **0-Disk Volatile RAM Only**: Decrypted only inside transient memory streams (`io.BytesIO`). No database (no PostgreSQL/MongoDB) and no disk storage.
+* **Automatic PII Redaction**: Account numbers, card CVVs, customer names, and balance totals are stripped out before AI auditing.
+* **Ephemeral Session Keys**: One-time disposable encryption keys are generated per audit and permanently destroyed upon completion.
 
-    // pipe joint — a low-poly torus, the "source" of the leak
-    const pipeGeo = new THREE.TorusGeometry(1.15, 0.16, 16, 48);
-    const pipeMat = new THREE.MeshStandardMaterial({
-      color: 0x6fa88c,
-      metalness: 0.35,
-      roughness: 0.45,
-      wireframe: false,
-    });
-    const pipe = new THREE.Mesh(pipeGeo, pipeMat);
-    pipe.rotation.x = Math.PI / 2.4;
-    pipe.position.y = 1.4;
-    scene.add(pipe);
+### 🤖 3. Dual-Agent AI Leak Detection Engine
+* Cross-references 45,000+ global subscription merchant signatures (Netflix, Spotify, AWS, gym passes, SaaS, iCloud, etc.).
+* Flags dormant services, categorizes expenses, and auto-generates 1-click step-by-step cancellation playbooks.
 
-    const wireGeo = new THREE.TorusGeometry(1.4, 0.01, 8, 48);
-    const wireMat = new THREE.MeshBasicMaterial({ color: 0x2b303b });
-    const wireRing = new THREE.Mesh(wireGeo, wireMat);
-    wireRing.rotation.x = Math.PI / 2.4;
-    wireRing.position.y = 1.4;
-    scene.add(wireRing);
+### 🔑 4. Firebase Google Single Sign-On (SSO)
+* Instant authentication with Google SSO.
+* Persistent user profile avatars and secure session handling.
 
-    const ambient = new THREE.AmbientLight(0xffffff, 0.55);
-    scene.add(ambient);
-    const key = new THREE.DirectionalLight(0xffffff, 0.9);
-    key.position.set(3, 4, 5);
-    scene.add(key);
-    const rim = new THREE.DirectionalLight(0xd99a4e, 0.4);
-    rim.position.set(-4, -2, -3);
-    scene.add(rim);
+---
 
-    // drops
-    const dropGeo = new THREE.SphereGeometry(0.11, 16, 16);
-    const dropMat = new THREE.MeshStandardMaterial({
-      color: 0xd99a4e,
-      metalness: 0.1,
-      roughness: 0.25,
-      transparent: true,
-    });
+## 📋 How to Use StopTheDrip
 
-    const drops = [];
-    const DROP_COUNT = 6;
-    for (let i = 0; i < DROP_COUNT; i++) {
-      const mesh = new THREE.Mesh(dropGeo, dropMat.clone());
-      mesh.visible = false;
-      scene.add(mesh);
-      drops.push({
-        mesh,
-        y: 1.1,
-        active: false,
-        delay: i * (1.9 / DROP_COUNT),
-      });
-    }
+```
+[ Step 1: Unlock PDF ]  ──>  [ Step 2: Upload to StopTheDrip ]  ──>  [ Step 3: Stop The Drip ]
+ (iLovePDF Unlocker)            (In-Browser AES Encryption)            (1-Click Cancellation)
+```
 
-    let elapsed = 0;
-    let raf;
-    const clock = new THREE.Clock();
+1. **Step 1: Unlock Password-Protected Statement**
+   - Bank PDFs (HDFC, ICICI, SBI, Axis, Chase, etc.) are encrypted with your DOB/PAN password.
+   - Go to **[iLovePDF Unlock PDF](https://www.ilovepdf.com/unlock_pdf)** $\rightarrow$ upload statement $\rightarrow$ enter your password once $\rightarrow$ download unlocked PDF.
+2. **Step 2: Upload Statement to StopTheDrip**
+   - Drag & drop your unlocked PDF or exported bank CSV.
+3. **Step 3: Review Leaks & Stop Them**
+   - View your total monthly & annual leakage, health score, and follow instant cancellation pathways.
 
-    function animate() {
-      raf = requestAnimationFrame(animate);
-      const dt = clock.getDelta();
-      elapsed += dt;
+---
 
-      pipe.rotation.z += dt * 0.15;
-      wireRing.rotation.z += dt * 0.15;
+## 🛠️ Tech Stack & Architecture
 
-      drops.forEach((d) => {
-        const t = (elapsed - d.delay) % 1.9;
-        if (t < 0) {
-          d.mesh.visible = false;
-          return;
-        }
-        d.mesh.visible = true;
-        const fallProgress = Math.min(t / 1.5, 1);
-        const y = 1.1 - fallProgress * fallProgress * 2.6;
-        d.mesh.position.set(0, y, 0);
-        const stretch = 1 + fallProgress * 0.6;
-        d.mesh.scale.set(1 / stretch, stretch, 1 / stretch);
-        d.mesh.material.opacity = t < 1.5 ? 1 : Math.max(0, 1 - (t - 1.5) / 0.4);
-      });
+```
+stop-the-drip/
+├── backend/                  # FastAPI Python Backend
+│   ├── main.py               # REST API & in-memory stream endpoints
+│   ├── crypto.py             # AES-256-GCM RAM-only decryption
+│   ├── parser.py             # PDF & CSV statement parser + PII scrubber
+│   └── analyzer.py           # Gemini Dual-Agent subscription audit engine
+├── frontend/                 # Vite + React + Tailwind CSS
+│   ├── src/
+│   │   ├── App.jsx           # Main Application & State Machine
+│   │   ├── crypto.js         # Browser Web Crypto API 256-bit AES-GCM
+│   │   ├── firebase.js       # Firebase Google SSO Authentication
+│   │   └── components/
+│   │       └── StopTheDripHero.jsx # Three.js 3D Interactive Drip Visualizer
+│   └── package.json
+├── render.yaml               # Render Backend Deployment Blueprint
+└── vercel.json               # Vercel Frontend Deployment Config
+```
 
-      renderer.render(scene, camera);
-    }
-    animate();
+---
 
-    function handleResize() {
-      const w = mount.clientWidth;
-      const h = mount.clientHeight;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
-    }
-    window.addEventListener("resize", handleResize);
+## 🚀 Live Deployment Guide
 
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("resize", handleResize);
-      renderer.dispose();
-      pipeGeo.dispose();
-      pipeMat.dispose();
-      wireGeo.dispose();
-      wireMat.dispose();
-      dropGeo.dispose();
-      dropMat.dispose();
-      if (mount.contains(renderer.domElement)) {
-        mount.removeChild(renderer.domElement);
-      }
-    };
-  }, []);
+### 1. Backend on Render
+- **Build Command**: `pip install -r requirements.txt`
+- **Start Command**: `uvicorn backend.main:app --host 0.0.0.0 --port $PORT`
+- **Environment Variables**:
+  - `GEMINI_API_KEY`: Your Google AI Studio API key
+  - `PYTHON_VERSION`: `3.10.6`
 
-  return <div ref={mountRef} style={{ width: "100%", height: "100%" }} />;
-}
+### 2. Frontend on Vercel
+- **Framework**: `Vite`
+- **Root Directory**: `frontend`
+- **Build Command**: `npm run build`
+- **Output Directory**: `dist`
+- **Environment Variables**:
+  - `VITE_API_URL`: Your Render backend URL
+  - `VITE_API_BASE_URL`: Your Render backend URL
+  - `VITE_FIREBASE_API_KEY`: Firebase API Key
+  - `VITE_FIREBASE_AUTH_DOMAIN`: Firebase Auth Domain
+  - `VITE_FIREBASE_PROJECT_ID`: Firebase Project ID
+  - `VITE_FIREBASE_STORAGE_BUCKET`: Firebase Storage Bucket
+  - `VITE_FIREBASE_MESSAGING_SENDER_ID`: Firebase Messaging Sender ID
+  - `VITE_FIREBASE_APP_ID`: Firebase App ID
 
-function CategoryBar({ name, amount, of }) {
-  const pct = Math.round((amount / of) * 100);
-  return (
-    <div style={{ marginBottom: 14 }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          fontFamily: "Inter, sans-serif",
-          fontSize: 13,
-          color: "#8A93A3",
-          marginBottom: 6,
-        }}
-      >
-        <span>{name}</span>
-        <span style={{ color: "#ECEEF3" }}>{formatUSD(amount)}/mo</span>
-      </div>
-      <div style={{ height: 3, background: "#232833", borderRadius: 0 }}>
-        <div
-          style={{
-            height: 3,
-            width: `${pct}%`,
-            background: "#6FA88C",
-          }}
-        />
-      </div>
-    </div>
-  );
-}
+---
 
-function LedgerRow({ item }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div style={{ borderTop: "1px solid #2B303B" }}>
-      <button
-        onClick={() => setOpen((v) => !v)}
-        style={{
-          all: "unset",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          width: "100%",
-          padding: "18px 0",
-          boxSizing: "border-box",
-        }}
-      >
-        <div>
-          <div
-            style={{
-              fontFamily: "Newsreader, serif",
-              fontSize: 18,
-              color: "#ECEEF3",
-            }}
-          >
-            {item.merchant}
-          </div>
-          <div
-            style={{
-              fontFamily: "Inter, sans-serif",
-              fontSize: 12,
-              color: "#8A93A3",
-              marginTop: 3,
-            }}
-          >
-            {item.kind} · {item.cadence} · {Math.round(item.confidence * 100)}% confidence
-          </div>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-          <span
-            style={{
-              fontFamily: "Inter, sans-serif",
-              fontSize: 15,
-              color: "#D99A4E",
-            }}
-          >
-            {formatUSD(item.amount)}
-          </span>
-          <span
-            style={{
-              display: "inline-block",
-              transform: open ? "rotate(45deg)" : "rotate(0deg)",
-              transition: "transform 160ms ease",
-              color: "#8A93A3",
-              fontSize: 20,
-              lineHeight: "20px",
-            }}
-          >
-            +
-          </span>
-        </div>
-      </button>
-      {open && (
-        <div style={{ padding: "0 0 20px 0" }}>
-          <p
-            style={{
-              fontFamily: "Inter, sans-serif",
-              fontSize: 13,
-              color: "#8A93A3",
-              margin: "0 0 12px 0",
-            }}
-          >
-            {item.note}
-          </p>
-          <ol style={{ margin: 0, paddingLeft: 20 }}>
-            {item.steps.map((s, i) => (
-              <li
-                key={i}
-                style={{
-                  fontFamily: "Inter, sans-serif",
-                  fontSize: 13,
-                  color: "#ECEEF3",
-                  marginBottom: 6,
-                }}
-              >
-                {s}
-              </li>
-            ))}
-          </ol>
-        </div>
-      )}
-    </div>
-  );
-}
+## 🛡️ License
 
-export default function StopTheDripHero() {
-  const monthlyTotal = LEDGER.reduce((s, i) => s + i.amount, 0);
-  const annualTotal = monthlyTotal * 12;
-
-  return (
-    <div
-      style={{
-        background: "#12151C",
-        color: "#ECEEF3",
-        padding: "56px 40px",
-        borderRadius: 4,
-      }}
-    >
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500&display=swap');
-      `}</style>
-
-      {/* hero */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1.1fr 0.9fr",
-          gap: 32,
-          alignItems: "center",
-          paddingBottom: 40,
-        }}
-      >
-        <div>
-          <h1
-            style={{
-              fontFamily: "Newsreader, serif",
-              fontWeight: 400,
-              fontSize: 44,
-              lineHeight: 1.15,
-              margin: "0 0 18px 0",
-              maxWidth: 480,
-            }}
-          >
-            Every month, something drips out unnoticed.
-          </h1>
-          <p
-            style={{
-              fontFamily: "Inter, sans-serif",
-              fontSize: 15,
-              color: "#8A93A3",
-              lineHeight: 1.6,
-              maxWidth: 420,
-              margin: "0 0 28px 0",
-            }}
-          >
-            Upload a statement. StopTheDrip finds the subscriptions and fees
-            you forgot about, and tells you exactly how to stop them —
-            without ever storing the file.
-          </p>
-          <div style={{ display: "flex", gap: 40 }}>
-            <div>
-              <div
-                style={{
-                  fontFamily: "Newsreader, serif",
-                  fontSize: 32,
-                  color: "#D99A4E",
-                }}
-              >
-                {formatUSD(monthlyTotal)}
-              </div>
-              <div
-                style={{
-                  fontFamily: "Inter, sans-serif",
-                  fontSize: 12,
-                  color: "#8A93A3",
-                  marginTop: 2,
-                }}
-              >
-                leaking every month
-              </div>
-            </div>
-            <div>
-              <div
-                style={{
-                  fontFamily: "Newsreader, serif",
-                  fontSize: 32,
-                  color: "#ECEEF3",
-                }}
-              >
-                {formatUSD(annualTotal)}
-              </div>
-              <div
-                style={{
-                  fontFamily: "Inter, sans-serif",
-                  fontSize: 12,
-                  color: "#8A93A3",
-                  marginTop: 2,
-                }}
-              >
-                per year, if untouched
-              </div>
-            </div>
-          </div>
-        </div>
-        <div style={{ height: 320 }}>
-          <DripCanvas />
-        </div>
-      </div>
-
-      {/* category breakdown */}
-      <div style={{ borderTop: "1px solid #2B303B", paddingTop: 32 }}>
-        <div
-          style={{
-            fontFamily: "Inter, sans-serif",
-            fontSize: 13,
-            color: "#8A93A3",
-            marginBottom: 18,
-          }}
-        >
-          Spend by category
-        </div>
-        {CATEGORIES.map((c) => (
-          <CategoryBar key={c.name} {...c} />
-        ))}
-      </div>
-
-      {/* ledger */}
-      <div style={{ marginTop: 32 }}>
-        <div
-          style={{
-            fontFamily: "Inter, sans-serif",
-            fontSize: 13,
-            color: "#8A93A3",
-          }}
-        >
-          Charges found
-        </div>
-        {LEDGER.map((item) => (
-          <LedgerRow key={item.merchant} item={item} />
-        ))}
-      </div>
-    </div>
-  );
-}
+MIT License. Designed with privacy-first principles.
