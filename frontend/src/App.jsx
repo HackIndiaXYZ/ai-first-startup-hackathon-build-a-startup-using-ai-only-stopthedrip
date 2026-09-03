@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { encryptStatementBuffer } from './crypto'
+import { signInWithGoogle, logOut, subscribeToAuthChanges, isFirebaseConfigured } from './firebase'
 
 const API_BASE_URL = (import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
 
@@ -95,6 +96,50 @@ export default function App() {
   const [errorMessage, setErrorMessage] = useState(null)
   const [isDragOver, setIsDragOver] = useState(false)
   const [encryptionStatus, setEncryptionStatus] = useState('256-bit local encryption verified')
+
+  // Firebase Auth State
+  const [currentUser, setCurrentUser] = useState(null)
+  const [isSigningIn, setIsSigningIn] = useState(false)
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const [showConfigHelp, setShowConfigHelp] = useState(false)
+
+  // Subscribe to Firebase Auth changes on mount
+  useEffect(() => {
+    const unsubscribe = subscribeToAuthChanges((user) => {
+      setCurrentUser(user)
+    })
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe()
+    }
+  }, [])
+
+  const handleGoogleSignIn = async () => {
+    if (!isFirebaseConfigured) {
+      setShowConfigHelp(true)
+      return
+    }
+    try {
+      setIsSigningIn(true)
+      setErrorMessage(null)
+      await signInWithGoogle()
+    } catch (err) {
+      console.error('Google SSO Sign in error:', err)
+      if (err.code !== 'auth/popup-closed-by-user') {
+        setErrorMessage(err.message || 'Failed to authenticate with Google.')
+      }
+    } finally {
+      setIsSigningIn(false)
+    }
+  }
+
+  const handleSignOut = async () => {
+    try {
+      await logOut()
+      setIsUserMenuOpen(false)
+    } catch (err) {
+      console.error('Sign out error:', err)
+    }
+  }
 
   // Analyzing state progression
   const [analyzingStep, setAnalyzingStep] = useState(1)
@@ -288,10 +333,62 @@ export default function App() {
             <a className="hover:text-on transition-colors" href="#">Audit timeline</a>
             <a className="hover:text-on transition-colors" href="#">Settings</a>
           </nav>
-          <div className="flex items-center gap-4">
-            <div className="w-9 h-9 rounded-full bg-surface-container border border-outline flex items-center justify-center text-on font-medium text-sm">
-              U
-            </div>
+          <div className="flex items-center gap-3">
+            {currentUser ? (
+              <div className="relative">
+                <button
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="flex items-center gap-2 p-1 pl-2.5 pr-2 rounded-full bg-surface-container border border-outline hover:border-primary transition-all text-left"
+                >
+                  <span className="text-xs font-medium text-on max-w-[120px] truncate">
+                    {currentUser.displayName || currentUser.email?.split('@')[0] || 'User'}
+                  </span>
+                  {currentUser.photoURL ? (
+                    <img 
+                      src={currentUser.photoURL} 
+                      alt="User avatar" 
+                      className="w-7 h-7 rounded-full border border-outline object-cover" 
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-primary/20 text-primary border border-primary/40 flex items-center justify-center text-xs font-semibold">
+                      {(currentUser.displayName || currentUser.email || 'U')[0].toUpperCase()}
+                    </div>
+                  )}
+                </button>
+
+                {/* Dropdown Menu */}
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-surface-container border border-outline rounded-lg shadow-xl py-2 z-50 animate-in fade-in">
+                    <div className="px-4 py-2 border-b border-outline">
+                      <p className="text-xs font-medium text-on truncate">{currentUser.displayName || 'Google Account'}</p>
+                      <p className="text-[11px] text-on-surface-variant truncate">{currentUser.email}</p>
+                    </div>
+                    <button
+                      onClick={handleSignOut}
+                      className="w-full text-left px-4 py-2 text-xs text-error hover:bg-surface-container-high transition-colors flex items-center gap-2"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">logout</span>
+                      <span>Sign out</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={handleGoogleSignIn}
+                disabled={isSigningIn}
+                className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-surface-container hover:bg-surface-container-high border border-outline hover:border-primary transition-all text-xs font-medium text-on shadow-sm active:scale-95"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.9c2.28-2.1 3.64-5.2 3.64-9.15z"/>
+                  <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.9-3.05c-1.08.72-2.45 1.16-4.03 1.16-3.1 0-5.73-2.09-6.67-4.91H1.27v3.14C3.25 21.36 7.31 24 12 24z"/>
+                  <path fill="#FBBC05" d="M5.33 14.29c-.24-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.57H1.27C.46 8.19 0 10.03 0 12s.46 3.81 1.27 5.43l4.06-3.14z"/>
+                  <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.64 1.27 6.57l4.06 3.14c.94-2.82 3.57-4.96 6.67-4.96z"/>
+                </svg>
+                <span>{isSigningIn ? 'Connecting...' : 'Sign in with Google'}</span>
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -665,6 +762,48 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* FIREBASE CONFIG HELP MODAL */}
+      {showConfigHelp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="bg-surface-container border border-outline rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-outline pb-3">
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.9c2.28-2.1 3.64-5.2 3.64-9.15z"/>
+                  <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.9-3.05c-1.08.72-2.45 1.16-4.03 1.16-3.1 0-5.73-2.09-6.67-4.91H1.27v3.14C3.25 21.36 7.31 24 12 24z"/>
+                  <path fill="#FBBC05" d="M5.33 14.29c-.24-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.57H1.27C.46 8.19 0 10.03 0 12s.46 3.81 1.27 5.43l4.06-3.14z"/>
+                  <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.64 1.27 6.57l4.06 3.14c.94-2.82 3.57-4.96 6.67-4.96z"/>
+                </svg>
+                <h3 className="font-headline text-lg font-medium text-on">Google SSO Setup</h3>
+              </div>
+              <button 
+                onClick={() => setShowConfigHelp(false)}
+                className="text-on-surface-variant hover:text-on text-sm p-1"
+              >
+                ✕
+              </button>
+            </div>
+            <p className="text-xs text-on-surface-variant leading-relaxed">
+              Google Single Sign-On is fully built and ready! To connect your own Firebase project, add these environment variables to your <code className="text-primary font-mono">.env</code> or Vercel Environment Variables:
+            </p>
+            <div className="bg-surface-container-lowest p-3 rounded border border-outline font-mono text-[11px] text-primary space-y-1 overflow-x-auto">
+              <div>VITE_FIREBASE_API_KEY=...</div>
+              <div>VITE_FIREBASE_AUTH_DOMAIN=...</div>
+              <div>VITE_FIREBASE_PROJECT_ID=...</div>
+              <div>VITE_FIREBASE_STORAGE_BUCKET=...</div>
+              <div>VITE_FIREBASE_MESSAGING_SENDER_ID=...</div>
+              <div>VITE_FIREBASE_APP_ID=...</div>
+            </div>
+            <button
+              onClick={() => setShowConfigHelp(false)}
+              className="w-full py-2 bg-primary text-on-primary rounded text-xs font-medium hover:bg-primary/90 transition-colors"
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
