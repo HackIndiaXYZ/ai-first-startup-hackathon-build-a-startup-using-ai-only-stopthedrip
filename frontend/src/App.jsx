@@ -118,6 +118,13 @@ const INITIAL_RESULTS = {
   optimization_callout: 'Cancelling Cult.fit Pass and Calm Mindset immediately recovers ₹1,498 / month (₹17,976 / year) with zero disruption to your daily life.'
 }
 
+const SUPPORTED_SERVICES = [
+  'HDFC Bank', 'ICICI Bank', 'State Bank of India', 'Axis Bank', 'Kotak Mahindra', 
+  'Chase Bank', 'American Express', 'Netflix', 'Spotify', 'Cult.fit', 'AWS Cloud', 
+  'Calm Mindset', 'iCloud', 'OpenAI ChatGPT', 'GitHub Pro', 'Adobe Creative Cloud', 
+  'YouTube Premium', 'Google Workspace', 'Disney+ Hotstar', 'Swiggy One', 'Zomato Gold'
+]
+
 /**
  * Enhanced 3D WebGL Three.js Canvas with Mouse Parallax & Splash Physics
  */
@@ -227,7 +234,6 @@ function DripCanvas() {
       const dt = clock.getDelta()
       elapsed += dt
 
-      // Smooth mouse lerp
       camera.position.x += (mouseX - camera.position.x) * 0.05
       camera.position.y += (0.6 - mouseY - camera.position.y) * 0.05
       camera.lookAt(0, 0, 0)
@@ -249,7 +255,6 @@ function DripCanvas() {
         d.mesh.scale.set(1 / stretch, stretch, 1 / stretch)
         d.mesh.material.opacity = t < 1.45 ? 1 : Math.max(0, 1 - (t - 1.45) / 0.45)
 
-        // Trigger ripple
         if (fallProgress > 0.95) {
           splash.material.opacity = THREE.MathUtils.lerp(splash.material.opacity, 0.4, 0.2)
           splash.scale.setScalar(1 + (fallProgress - 0.95) * 8)
@@ -303,6 +308,8 @@ export default function App() {
   const [errorMessage, setErrorMessage] = useState(null)
   const [isDragOver, setIsDragOver] = useState(false)
   const [encryptionStatus, setEncryptionStatus] = useState('256-bit local AES-GCM verified')
+  const [scrollProgress, setScrollProgress] = useState(0)
+  const [showScrollTop, setShowScrollTop] = useState(false)
 
   // Firebase Auth State
   const [currentUser, setCurrentUser] = useState(null)
@@ -317,6 +324,40 @@ export default function App() {
 
   const fileInputRef = useRef(null)
 
+  // Scroll Progress and Observer Listener
+  useEffect(() => {
+    const handleScroll = () => {
+      const totalScroll = document.documentElement.scrollHeight - window.innerHeight
+      if (totalScroll > 0) {
+        const currentProgress = (window.scrollY / totalScroll) * 100
+        setScrollProgress(currentProgress)
+      }
+      setShowScrollTop(window.scrollY > 300)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  // Auto-trigger reveal animations on scroll
+  useEffect(() => {
+    const elements = document.querySelectorAll('.reveal-on-scroll')
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible')
+          }
+        })
+      },
+      { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
+    )
+
+    elements.forEach((el) => observer.observe(el))
+    return () => observer.disconnect()
+  }, [currentState, filterTag])
+
+  // Listen to Firebase Auth state
   useEffect(() => {
     const unsubscribe = subscribeToAuthChanges((user) => {
       setCurrentUser(user)
@@ -509,9 +550,15 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#0E1117] text-[#ECEEF3] flex flex-col selection:bg-[#D99A4E]/30 selection:text-[#D99A4E] relative overflow-x-hidden">
+      {/* Realtime Scroll Progress Top Indicator */}
+      <div 
+        className="fixed top-0 left-0 h-[2.5px] bg-gradient-to-r from-[#D99A4E] via-[#6FA88C] to-[#D99A4E] z-50 transition-all duration-150 shadow-[0_0_8px_#D99A4E]" 
+        style={{ width: `${scrollProgress}%` }} 
+      />
+
       {/* Dynamic Ambient Background Glows */}
-      <div className="absolute top-0 left-1/4 w-[600px] h-[400px] bg-[#6FA88C]/10 rounded-full blur-[140px] pointer-events-none -z-10"></div>
-      <div className="absolute top-20 right-10 w-[500px] h-[500px] bg-[#D99A4E]/10 rounded-full blur-[160px] pointer-events-none -z-10"></div>
+      <div className="absolute top-0 left-1/4 w-[650px] h-[450px] bg-[#6FA88C]/10 rounded-full blur-[150px] pointer-events-none -z-10 animate-pulse"></div>
+      <div className="absolute top-40 right-10 w-[550px] h-[550px] bg-[#D99A4E]/10 rounded-full blur-[170px] pointer-events-none -z-10"></div>
 
       {/* Hidden file input */}
       <input
@@ -664,7 +711,7 @@ export default function App() {
         {currentState === 'upload' && (
           <div className="space-y-16 animate-in fade-in duration-500">
             {/* HERO 3D EXPERIENCE */}
-            <div className="glass-panel rounded-3xl p-8 md:p-12 shadow-2xl relative overflow-hidden gradient-border-glow">
+            <div className="glass-panel rounded-3xl p-8 md:p-12 shadow-2xl relative overflow-hidden gradient-border-glow reveal-on-scroll is-visible">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
                 {/* Left Telemetry & Story */}
                 <div className="lg:col-span-7 space-y-6 z-10">
@@ -724,8 +771,21 @@ export default function App() {
               </div>
             </div>
 
+            {/* INFINITE SCROLLING SUPPORTED MERCHANTS & BANKS TICKER */}
+            <div className="reveal-on-scroll overflow-hidden py-4 border-y border-[#2B303B]/60 bg-[#12151C]/50 backdrop-blur-sm">
+              <div className="animate-marquee items-center gap-8 text-xs font-mono text-[#8A93A3]">
+                {SUPPORTED_SERVICES.concat(SUPPORTED_SERVICES).map((service, idx) => (
+                  <span key={idx} className="flex items-center gap-3">
+                    <span className="text-[#6FA88C]">⚡</span>
+                    <span className="hover:text-[#ECEEF3] transition-colors">{service}</span>
+                    <span className="text-[#2B303B]">•</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+
             {/* AUDIT WORKSPACE (Upload Dropzone + Step-by-Step Guide) */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start reveal-on-scroll">
               {/* UPLOAD WORKSPACE */}
               <div className="lg:col-span-7 space-y-6">
                 <div className="space-y-1.5">
@@ -857,7 +917,7 @@ export default function App() {
             </div>
 
             {/* 4 BANK-GRADE ENCRYPTION PILLARS */}
-            <div className="space-y-6 pt-6 border-t border-[#2B303B]">
+            <div className="space-y-6 pt-6 border-t border-[#2B303B] reveal-on-scroll">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <h2 className="font-headline text-2xl font-normal text-[#ECEEF3]">
@@ -971,7 +1031,7 @@ export default function App() {
         {currentState === 'results' && (
           <section className="space-y-12 animate-in fade-in duration-500">
             {/* AUDIT SUMMARY HERO BANNER */}
-            <div className="glass-panel rounded-3xl p-8 md:p-12 space-y-8 shadow-2xl gradient-border-glow">
+            <div className="glass-panel rounded-3xl p-8 md:p-12 space-y-8 shadow-2xl gradient-border-glow reveal-on-scroll is-visible">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#2B303B] pb-6">
                 <div>
                   <div className="flex items-center gap-2 text-xs font-mono text-[#6FA88C]">
@@ -1061,7 +1121,7 @@ export default function App() {
             </div>
 
             {/* AUDIT DETAILS: 2 COLUMN SPLIT */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start reveal-on-scroll">
               {/* LEFT 7 COLS: FILTERABLE EXPANDABLE LEAK ROWS */}
               <div className="lg:col-span-7 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#2B303B]">
@@ -1239,6 +1299,17 @@ export default function App() {
           </section>
         )}
       </main>
+
+      {/* FLOATING BACK TO TOP BUTTON */}
+      {showScrollTop && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="fixed bottom-6 left-6 z-50 w-10 h-10 rounded-full bg-[#181C25] border border-[#2B303B] hover:border-[#D99A4E] text-[#D99A4E] flex items-center justify-center shadow-xl transition-all hover:scale-110 active:scale-95 animate-in fade-in"
+          title="Back to Top"
+        >
+          <span className="material-symbols-outlined text-[20px]">arrow_upward</span>
+        </button>
+      )}
 
       {/* LUXURY FOOTER */}
       <footer className="w-full border-t border-[#2B303B] bg-[#0E1117] mt-auto py-12">

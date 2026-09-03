@@ -3,6 +3,9 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
   html, body {
     margin: 0;
     padding: 0;
@@ -61,7 +64,7 @@
 /* Gradient Glowing Border Card */
 .gradient-border-glow {
   position: relative;
-  border-radius: 1rem;
+  border-radius: 1.5rem;
 }
 .gradient-border-glow::before {
   content: '';
@@ -69,7 +72,7 @@
   inset: -1px;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, rgba(217, 154, 78, 0.4), rgba(111, 168, 140, 0.2), rgba(43, 48, 59, 0.5));
+  background: linear-gradient(135deg, rgba(217, 154, 78, 0.4), rgba(111, 168, 140, 0.25), rgba(43, 48, 59, 0.5));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -95,6 +98,38 @@
 
 .radar-glow {
   animation: radar-pulse 2.2s infinite;
+}
+
+/* Infinite Scrolling Marquee Banner */
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll 32s linear infinite;
+}
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Smooth Scroll Reveal */
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-on-scroll.is-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* Scrollbars */
