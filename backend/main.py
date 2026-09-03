@@ -13,11 +13,16 @@ from typing import Optional
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
-from dotenv import load_dotenv
+import sys
+backend_dir = os.path.dirname(os.path.abspath(__file__))
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
 
 from crypto import decrypt_data, decrypt_payload_b64
 from parser import parse_statement
 from analyzer import analyze_transactions, create_empty_response
+
+from dotenv import load_dotenv
 
 load_dotenv()
 
