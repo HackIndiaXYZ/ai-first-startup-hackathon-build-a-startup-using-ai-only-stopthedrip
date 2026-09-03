@@ -429,70 +429,201 @@ export default function App() {
 
         {/* STATE 1: UPLOAD */}
         {currentState === 'upload' && (
-          <section className="flex flex-col justify-center min-h-[600px] transition-all duration-300" id="state-upload">
-            <div className="max-w-xl space-y-8">
-              <div className="space-y-3">
-                <span className="text-xs font-mono text-primary tracking-wide">autonomous financial audit</span>
-                <h1 className="text-4xl md:text-5xl font-headline font-normal text-on leading-[1.15]">
-                  Find your <span className="italic text-primary font-headline">quiet money leaks</span>.
-                </h1>
-                <p className="text-base text-on-surface-variant leading-relaxed">
-                  Drop your bank statement PDF or CSV. Our localized engine isolates forgotten subscriptions, hidden platform fees, and dormant recurrent charges instantly.
-                </p>
-              </div>
-
-              {/* Error Message if any */}
-              {errorMessage && (
-                <div className="p-3 bg-error-container text-error rounded-md text-xs flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[16px]">error</span>
-                  <span>{errorMessage}</span>
-                </div>
-              )}
-
-              {/* Dropzone */}
-              <div
-                className={`border border-dashed transition-all rounded-lg p-10 cursor-pointer flex flex-col items-start gap-4 ${
-                  isDragOver
-                    ? 'border-primary bg-surface-container'
-                    : 'border-outline hover:border-primary bg-surface-container-low hover:bg-surface-container'
-                }`}
-                onClick={() => fileInputRef.current?.click()}
-                onDragOver={(e) => { e.preventDefault(); setIsDragOver(true) }}
-                onDragLeave={() => setIsDragOver(false)}
-                onDrop={handleDrop}
-              >
-                <div className="w-10 h-10 rounded border border-outline bg-background flex items-center justify-center text-primary">
-                  <span className="material-symbols-outlined text-[20px]">upload_file</span>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-on">
-                    Drop your statement here, or <span className="text-primary underline underline-offset-4">browse files</span>
-                  </p>
-                  <p className="text-xs text-on-surface-variant">
-                    Supports PDF, CSV, Excel exports from all major global banks
+          <section className="flex flex-col space-y-12 transition-all duration-300" id="state-upload">
+            {/* HERO + HOW-TO GRID */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+              {/* LEFT COLUMN: HERO & DROPZONE */}
+              <div className="lg:col-span-7 space-y-8">
+                <div className="space-y-3">
+                  <span className="text-xs font-mono text-primary tracking-wide">autonomous financial audit</span>
+                  <h1 className="text-4xl md:text-5xl font-headline font-normal text-on leading-[1.15]">
+                    Find your <span className="italic text-primary font-headline">quiet money leaks</span>.
+                  </h1>
+                  <p className="text-base text-on-surface-variant leading-relaxed">
+                    Drop your bank statement PDF or CSV. Our localized engine isolates forgotten subscriptions, hidden platform fees, and dormant recurrent charges instantly.
                   </p>
                 </div>
-              </div>
 
-              {/* Sample statement trigger */}
-              <div className="flex flex-wrap items-center gap-4 pt-2">
-                <button
-                  className="px-5 py-2.5 rounded bg-primary text-on-primary text-sm font-medium hover:bg-primary/90 transition-colors flex items-center gap-2"
-                  onClick={() => performAnalysis(null, true)}
+                {/* Error Message if any */}
+                {errorMessage && (
+                  <div className="p-3.5 bg-error-container/80 border border-error/30 text-error rounded-lg text-xs flex items-center gap-2.5">
+                    <span className="material-symbols-outlined text-[18px]">error</span>
+                    <span>{errorMessage}</span>
+                  </div>
+                )}
+
+                {/* Dropzone */}
+                <div
+                  className={`border border-dashed transition-all rounded-xl p-8 md:p-10 cursor-pointer flex flex-col items-start gap-4 ${
+                    isDragOver
+                      ? 'border-primary bg-surface-container shadow-lg'
+                      : 'border-outline hover:border-primary bg-surface-container-low hover:bg-surface-container shadow-sm'
+                  }`}
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={(e) => { e.preventDefault(); setIsDragOver(true) }}
+                  onDragLeave={() => setIsDragOver(false)}
+                  onDrop={handleDrop}
                 >
-                  <span className="material-symbols-outlined text-[16px]">bolt</span>
-                  Try sample statement (142 transactions)
-                </button>
+                  <div className="w-12 h-12 rounded-lg border border-outline bg-background flex items-center justify-center text-primary shadow-inner">
+                    <span className="material-symbols-outlined text-[24px]">upload_file</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    <p className="text-sm font-medium text-on">
+                      Drop your statement here, or <span className="text-primary underline underline-offset-4 font-semibold">browse files</span>
+                    </p>
+                    <p className="text-xs text-on-surface-variant">
+                      Supports PDF, CSV, Excel exports from HDFC, SBI, ICICI, Axis, Kotak, Chase, Amex, etc.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Sample statement trigger */}
+                <div className="flex flex-wrap items-center gap-4 pt-1">
+                  <button
+                    className="px-5 py-2.5 rounded-lg bg-primary text-on-primary text-sm font-medium hover:bg-primary/90 transition-all flex items-center gap-2 shadow-sm active:scale-95"
+                    onClick={() => performAnalysis(null, true)}
+                  >
+                    <span className="material-symbols-outlined text-[16px]">bolt</span>
+                    Try sample statement (142 transactions)
+                  </button>
+                </div>
+
+                {/* Security quick badges */}
+                <div className="flex flex-wrap items-center gap-5 text-xs text-on-surface-variant pt-3 border-t border-outline">
+                  <span className="flex items-center gap-1.5" title={encryptionStatus}>
+                    <span className="material-symbols-outlined text-[15px] text-primary">lock</span> 256-bit AES-GCM
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[15px] text-primary">memory</span> Zero disk storage (RAM-only)
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[15px] text-primary">shield</span> Automatic PII scrubbing
+                  </span>
+                </div>
               </div>
 
-              {/* Security badges */}
-              <div className="flex items-center gap-6 text-xs text-on-surface-variant pt-4 border-t border-outline">
-                <span className="flex items-center gap-1.5" title={encryptionStatus}>
-                  <span className="material-symbols-outlined text-[14px] text-primary">lock</span> 256-bit local encryption
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[14px] text-primary">visibility_off</span> Zero data storage
-                </span>
+              {/* RIGHT COLUMN: STEP-BY-STEP USAGE GUIDE */}
+              <div className="lg:col-span-5 space-y-4">
+                <div className="bg-surface-container border border-outline rounded-xl p-6 space-y-5 shadow-sm">
+                  <div className="flex items-center justify-between border-b border-outline pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-primary text-[20px]">help_outline</span>
+                      <h3 className="font-headline text-lg font-medium text-on">How to Use</h3>
+                    </div>
+                    <span className="text-[11px] font-mono text-primary px-2 py-0.5 rounded bg-surface-container-high border border-outline">
+                      3 quick steps
+                    </span>
+                  </div>
+
+                  {/* Step 1 */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2.5 text-xs font-semibold text-on">
+                      <span className="w-5 h-5 rounded-full bg-primary/20 text-primary border border-primary/40 flex items-center justify-center text-[11px] font-mono">1</span>
+                      <span>Unlock Password-Protected PDF</span>
+                    </div>
+                    <p className="text-xs text-on-surface-variant pl-7 leading-relaxed">
+                      Bank statements (HDFC, ICICI, SBI, Axis, etc.) are protected with your password (DOB/PAN). Unlock it first before uploading:
+                    </p>
+                    <div className="pl-7 pt-1">
+                      <a
+                        href="https://www.ilovepdf.com/unlock_pdf"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-surface-container-high border border-outline hover:border-primary text-xs font-medium text-primary hover:text-on transition-all shadow-sm group"
+                      >
+                        <span className="material-symbols-outlined text-[16px] text-primary group-hover:scale-110 transition-transform">lock_open</span>
+                        <span>Unlock at iLovePDF.com</span>
+                        <span className="text-[10px] text-on-surface-variant font-mono">↗</span>
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Step 2 */}
+                  <div className="space-y-1.5 pt-2 border-t border-outline/50">
+                    <div className="flex items-center gap-2.5 text-xs font-semibold text-on">
+                      <span className="w-5 h-5 rounded-full bg-primary/20 text-primary border border-primary/40 flex items-center justify-center text-[11px] font-mono">2</span>
+                      <span>Upload PDF or CSV Here</span>
+                    </div>
+                    <p className="text-xs text-on-surface-variant pl-7 leading-relaxed">
+                      Drag and drop your unlocked PDF or exported bank CSV directly into the upload zone on the left.
+                    </p>
+                  </div>
+
+                  {/* Step 3 */}
+                  <div className="space-y-1.5 pt-2 border-t border-outline/50">
+                    <div className="flex items-center gap-2.5 text-xs font-semibold text-on">
+                      <span className="w-5 h-5 rounded-full bg-primary/20 text-primary border border-primary/40 flex items-center justify-center text-[11px] font-mono">3</span>
+                      <span>Get Instant Audit &amp; Savings</span>
+                    </div>
+                    <p className="text-xs text-on-surface-variant pl-7 leading-relaxed">
+                      Our AI audits all recurring charges against 45,000+ signatures and generates immediate cancellation pathways.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* HOW ENCRYPTION WORKS: 4 INTERACTIVE SECURITY CARDS */}
+            <div className="space-y-6 pt-8 border-t border-outline">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <h2 className="font-headline text-2xl font-normal text-on">
+                    Bank-Grade Encryption &amp; Privacy Suite
+                  </h2>
+                  <p className="text-xs text-on-surface-variant">
+                    Why uploading your bank statement to StopTheDrip is 100% confidential and safe.
+                  </p>
+                </div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-surface-container border border-outline rounded-full text-xs text-primary font-mono self-start sm:self-auto">
+                  <span className="material-symbols-outlined text-[14px]">verified_user</span>
+                  <span>zero-storage certified</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Card 1 */}
+                <div className="p-5 rounded-xl bg-surface-container border border-outline hover:border-primary/60 transition-all space-y-3 group shadow-sm">
+                  <div className="w-9 h-9 rounded-lg bg-surface-container-high border border-outline flex items-center justify-center text-primary group-hover:scale-105 transition-transform">
+                    <span className="material-symbols-outlined text-[20px]">enhanced_encryption</span>
+                  </div>
+                  <h3 className="text-sm font-semibold text-on font-headline">In-Browser 256-Bit AES</h3>
+                  <p className="text-xs text-on-surface-variant leading-relaxed">
+                    Statements are encrypted directly in your browser using the native W3C Web Crypto API before transmission.
+                  </p>
+                </div>
+
+                {/* Card 2 */}
+                <div className="p-5 rounded-xl bg-surface-container border border-outline hover:border-primary/60 transition-all space-y-3 group shadow-sm">
+                  <div className="w-9 h-9 rounded-lg bg-surface-container-high border border-outline flex items-center justify-center text-primary group-hover:scale-105 transition-transform">
+                    <span className="material-symbols-outlined text-[20px]">memory</span>
+                  </div>
+                  <h3 className="text-sm font-semibold text-on font-headline">0-Disk RAM Volatility</h3>
+                  <p className="text-xs text-on-surface-variant leading-relaxed">
+                    Zero database storage (no Postgres/MongoDB). Statements are parsed in volatile RAM streams and instantly purged.
+                  </p>
+                </div>
+
+                {/* Card 3 */}
+                <div className="p-5 rounded-xl bg-surface-container border border-outline hover:border-primary/60 transition-all space-y-3 group shadow-sm">
+                  <div className="w-9 h-9 rounded-lg bg-surface-container-high border border-outline flex items-center justify-center text-primary group-hover:scale-105 transition-transform">
+                    <span className="material-symbols-outlined text-[20px]">shield</span>
+                  </div>
+                  <h3 className="text-sm font-semibold text-on font-headline">Automatic PII Scrubbing</h3>
+                  <p className="text-xs text-on-surface-variant leading-relaxed">
+                    Account numbers, card details, balances, and customer names are stripped out before AI merchant auditing.
+                  </p>
+                </div>
+
+                {/* Card 4 */}
+                <div className="p-5 rounded-xl bg-surface-container border border-outline hover:border-primary/60 transition-all space-y-3 group shadow-sm">
+                  <div className="w-9 h-9 rounded-lg bg-surface-container-high border border-outline flex items-center justify-center text-primary group-hover:scale-105 transition-transform">
+                    <span className="material-symbols-outlined text-[20px]">key</span>
+                  </div>
+                  <h3 className="text-sm font-semibold text-on font-headline">Ephemeral Session Keys</h3>
+                  <p className="text-xs text-on-surface-variant leading-relaxed">
+                    One-time 96-bit nonces and throwaway encryption keys are generated per audit and permanently destroyed upon completion.
+                  </p>
+                </div>
               </div>
             </div>
           </section>
