@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react'
 import * as THREE from 'three'
 import { encryptStatementBuffer } from './crypto'
 import { signInWithGoogle, logOut, subscribeToAuthChanges, isFirebaseConfigured } from './firebase'
+import PrivacyPolicyPage from './components/PrivacyPolicyPage'
+import TermsOfServicePage from './components/TermsOfServicePage'
 
 const API_BASE_URL = (import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
 
@@ -300,7 +302,17 @@ function DripCanvas() {
 }
 
 export default function App() {
-  const [currentState, setCurrentState] = useState('upload') // 'upload' | 'analyzing' | 'results'
+  const getInitialStateFromUrl = () => {
+    if (typeof window === 'undefined') return 'upload'
+    const path = window.location.pathname.toLowerCase()
+    if (path === '/policy' || path.startsWith('/policy/')) return 'policy'
+    if (path === '/terms' || path === '/terms-of-service' || path.startsWith('/terms/')) return 'terms'
+    if (path === '/results') return 'results'
+    return 'upload'
+  }
+
+  const [currentState, setCurrentState] = useState(getInitialStateFromUrl) // 'upload' | 'analyzing' | 'results' | 'policy' | 'terms'
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
   const [resultsData, setResultsData] = useState(INITIAL_RESULTS)
   const [openAccordions, setOpenAccordions] = useState({ 'item-1': true })
   const [filterTag, setFilterTag] = useState('All') // 'All' | 'Forgotten' | 'Active'
@@ -323,6 +335,17 @@ export default function App() {
   const [loadingDesc, setLoadingDesc] = useState('256-bit AES-GCM hardware cipher active')
 
   const fileInputRef = useRef(null)
+
+  // Sync with browser Back / Forward buttons
+  useEffect(() => {
+    const handlePopState = () => {
+      const stateFromUrl = getInitialStateFromUrl()
+      setCurrentState(stateFromUrl)
+      setIsMobileNavOpen(false)
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
 
   // Scroll Progress and Observer Listener
   useEffect(() => {
@@ -369,7 +392,19 @@ export default function App() {
 
   const switchState = (newState) => {
     setCurrentState(newState)
+    setIsMobileNavOpen(false)
     window.scrollTo({ top: 0, behavior: 'smooth' })
+    if (typeof window !== 'undefined' && window.history) {
+      let targetPath = '/'
+      if (newState === 'policy') targetPath = '/policy'
+      else if (newState === 'terms') targetPath = '/terms'
+      else if (newState === 'results') targetPath = '/results'
+      else if (newState === 'upload') targetPath = '/'
+
+      if (window.location.pathname !== targetPath) {
+        window.history.pushState({ state: newState }, '', targetPath)
+      }
+    }
   }
 
   const toggleAccordion = (id) => {
@@ -582,14 +617,14 @@ export default function App() {
               </div>
               <span>stop the drip</span>
             </button>
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-[#181C25] border border-[#2B303B] rounded-full text-xs text-[#8A93A3]">
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1 bg-[#181C25] border border-[#2B303B] rounded-full text-xs text-[#8A93A3]">
               <span className="w-2 h-2 rounded-full bg-[#6FA88C] radar-glow"></span>
               <span className="font-mono text-[11px] tracking-wide">neural audit online</span>
             </div>
           </div>
 
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-8 text-xs font-mono uppercase tracking-widest text-[#8A93A3]">
+          {/* Navigation Links (Desktop) */}
+          <nav className="hidden md:flex items-center gap-6 text-xs font-mono uppercase tracking-widest text-[#8A93A3]">
             <button
               onClick={() => switchState('upload')}
               className={`hover:text-[#ECEEF3] transition-colors ${currentState === 'upload' ? 'text-[#D99A4E] font-semibold' : ''}`}
@@ -602,6 +637,18 @@ export default function App() {
             >
               Leak Vectors ({resultsData.leak_vectors?.length || 5})
             </button>
+            <button
+              onClick={() => switchState('policy')}
+              className={`hover:text-[#ECEEF3] transition-colors ${currentState === 'policy' ? 'text-[#D99A4E] font-semibold' : ''}`}
+            >
+              Privacy & Security
+            </button>
+            <button
+              onClick={() => switchState('terms')}
+              className={`hover:text-[#ECEEF3] transition-colors ${currentState === 'terms' ? 'text-[#D99A4E] font-semibold' : ''}`}
+            >
+              Terms
+            </button>
             <a
               href="https://www.ilovepdf.com/unlock_pdf"
               target="_blank"
@@ -613,15 +660,15 @@ export default function App() {
             </a>
           </nav>
 
-          {/* User Profile / Google SSO Button */}
-          <div className="flex items-center gap-4">
+          {/* User Profile / Google SSO Button & Mobile Toggle */}
+          <div className="flex items-center gap-3">
             {currentUser ? (
               <div className="relative">
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   className="flex items-center gap-2.5 p-1 pl-3 pr-2 rounded-full bg-[#181C25] border border-[#2B303B] hover:border-[#D99A4E] transition-all text-left shadow-lg"
                 >
-                  <span className="text-xs font-medium text-[#ECEEF3] max-w-[130px] truncate">
+                  <span className="text-xs font-medium text-[#ECEEF3] max-w-[120px] truncate">
                     {currentUser.displayName || currentUser.email?.split('@')[0] || 'User'}
                   </span>
                   {currentUser.photoURL ? (
@@ -646,8 +693,23 @@ export default function App() {
                       <p className="text-[11px] text-[#8A93A3] truncate font-mono">{currentUser.email}</p>
                     </div>
                     <button
+                      onClick={() => { setIsUserMenuOpen(false); switchState('policy') }}
+                      className="w-full text-left px-4 py-2 text-xs text-[#8A93A3] hover:text-[#ECEEF3] hover:bg-[#202531] transition-colors flex items-center gap-2"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">shield</span>
+                      <span>Privacy & Security</span>
+                    </button>
+                    <button
+                      onClick={() => { setIsUserMenuOpen(false); switchState('terms') }}
+                      className="w-full text-left px-4 py-2 text-xs text-[#8A93A3] hover:text-[#ECEEF3] hover:bg-[#202531] transition-colors flex items-center gap-2"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">description</span>
+                      <span>Terms of Service</span>
+                    </button>
+                    <div className="border-t border-[#2B303B] my-1"></div>
+                    <button
                       onClick={handleSignOut}
-                      className="w-full text-left px-4 py-2.5 text-xs text-[#FF6B6B] hover:bg-[#202531] transition-colors flex items-center gap-2"
+                      className="w-full text-left px-4 py-2 text-xs text-[#FF6B6B] hover:bg-[#202531] transition-colors flex items-center gap-2"
                     >
                       <span className="material-symbols-outlined text-[16px]">logout</span>
                       <span>Sign out</span>
@@ -659,49 +721,120 @@ export default function App() {
               <button
                 onClick={handleGoogleSignIn}
                 disabled={isSigningIn}
-                className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-[#181C25] hover:bg-[#202531] border border-[#2B303B] hover:border-[#D99A4E] transition-all text-xs font-medium text-[#ECEEF3] shadow-md active:scale-95 group"
+                className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-[#181C25] hover:bg-[#202531] border border-[#2B303B] hover:border-[#D99A4E] transition-all text-xs font-medium text-[#ECEEF3] shadow-md active:scale-95 group"
               >
-                <svg className="w-4 h-4 group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 group-hover:scale-110 transition-transform flex-shrink-0" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.9c2.28-2.1 3.64-5.2 3.64-9.15z"/>
                   <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.9-3.05c-1.08.72-2.45 1.16-4.03 1.16-3.1 0-5.73-2.09-6.67-4.91H1.27v3.14C3.25 21.36 7.31 24 12 24z"/>
                   <path fill="#FBBC05" d="M5.33 14.29c-.24-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.57H1.27C.46 8.19 0 10.03 0 12s.46 3.81 1.27 5.43l4.06-3.14z"/>
                   <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.64 1.27 6.57l4.06 3.14c.94-2.82 3.57-4.96 6.67-4.96z"/>
                 </svg>
-                <span>{isSigningIn ? 'Connecting...' : 'Sign in with Google'}</span>
+                <span className="hidden sm:inline">{isSigningIn ? 'Connecting...' : 'Sign in'}</span>
+                <span className="sm:hidden">{isSigningIn ? '...' : 'Sign in'}</span>
               </button>
             )}
+
+            {/* Mobile Hamburger Toggle Button */}
+            <button
+              onClick={() => setIsMobileNavOpen(!isMobileNavOpen)}
+              className="md:hidden p-2 rounded-xl bg-[#181C25] border border-[#2B303B] text-[#8A93A3] hover:text-[#ECEEF3] hover:border-[#D99A4E] transition-all"
+              aria-label="Toggle Navigation Menu"
+            >
+              <span className="material-symbols-outlined text-[22px]">
+                {isMobileNavOpen ? 'close' : 'menu'}
+              </span>
+            </button>
           </div>
         </div>
+
+        {/* Mobile Navigation Drawer */}
+        {isMobileNavOpen && (
+          <div className="md:hidden border-t border-[#2B303B] bg-[#0E1117]/95 backdrop-blur-2xl px-6 py-4 space-y-2 animate-in slide-in-from-top-2">
+            <button
+              onClick={() => switchState('upload')}
+              className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-mono uppercase tracking-wider flex items-center justify-between ${
+                currentState === 'upload' ? 'bg-[#D99A4E]/20 text-[#D99A4E] font-semibold' : 'text-[#8A93A3]'
+              }`}
+            >
+              <span>Statement Audit</span>
+              <span className="material-symbols-outlined text-[16px]">upload_file</span>
+            </button>
+            <button
+              onClick={() => switchState('results')}
+              className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-mono uppercase tracking-wider flex items-center justify-between ${
+                currentState === 'results' ? 'bg-[#D99A4E]/20 text-[#D99A4E] font-semibold' : 'text-[#8A93A3]'
+              }`}
+            >
+              <span>Leak Vectors ({resultsData.leak_vectors?.length || 5})</span>
+              <span className="material-symbols-outlined text-[16px]">analytics</span>
+            </button>
+            <button
+              onClick={() => switchState('policy')}
+              className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-mono uppercase tracking-wider flex items-center justify-between ${
+                currentState === 'policy' ? 'bg-[#D99A4E]/20 text-[#D99A4E] font-semibold' : 'text-[#8A93A3]'
+              }`}
+            >
+              <span>Privacy & Security Policy</span>
+              <span className="material-symbols-outlined text-[16px]">shield</span>
+            </button>
+            <button
+              onClick={() => switchState('terms')}
+              className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-mono uppercase tracking-wider flex items-center justify-between ${
+                currentState === 'terms' ? 'bg-[#D99A4E]/20 text-[#D99A4E] font-semibold' : 'text-[#8A93A3]'
+              }`}
+            >
+              <span>Terms of Service</span>
+              <span className="material-symbols-outlined text-[16px]">description</span>
+            </button>
+            <a
+              href="https://www.ilovepdf.com/unlock_pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full text-left px-3 py-2.5 rounded-xl text-xs font-mono uppercase tracking-wider text-[#6FA88C] flex items-center justify-between"
+            >
+              <span>iLovePDF Unlocker</span>
+              <span className="text-xs">↗</span>
+            </a>
+          </div>
+        )}
       </header>
 
       {/* MAIN CONTAINER */}
       <main className="flex-1 w-full max-w-7xl mx-auto px-6 md:px-12 py-10 md:py-16">
         {/* REVIEWER VIEW TOGGLES */}
-        <aside aria-label="Reviewer Controls" className="fixed bottom-6 right-6 z-50 flex items-center gap-2 p-1.5 bg-[#181C25]/90 backdrop-blur-xl border border-[#2B303B] rounded-xl shadow-2xl">
-          <span className="text-[11px] text-[#8A93A3] px-2 font-mono">Stage:</span>
+        <aside aria-label="Reviewer Controls" className="fixed bottom-6 right-6 z-50 flex items-center gap-1.5 p-1.5 bg-[#181C25]/90 backdrop-blur-xl border border-[#2B303B] rounded-xl shadow-2xl">
+          <span className="text-[10px] text-[#8A93A3] px-1.5 font-mono hidden sm:inline">Stage:</span>
           <button
-            className={`px-3 py-1 rounded-lg text-xs transition-all font-mono ${
+            className={`px-2.5 py-1 rounded-lg text-[11px] transition-all font-mono ${
               currentState === 'upload' ? 'bg-[#D99A4E] text-[#12151C] font-semibold shadow' : 'text-[#8A93A3] hover:text-[#ECEEF3]'
             }`}
             onClick={() => switchState('upload')}
           >
-            1. upload
+            audit
           </button>
           <button
-            className={`px-3 py-1 rounded-lg text-xs transition-all font-mono ${
-              currentState === 'analyzing' ? 'bg-[#D99A4E] text-[#12151C] font-semibold shadow' : 'text-[#8A93A3] hover:text-[#ECEEF3]'
-            }`}
-            onClick={() => switchState('analyzing')}
-          >
-            2. analyzing
-          </button>
-          <button
-            className={`px-3 py-1 rounded-lg text-xs transition-all font-mono ${
+            className={`px-2.5 py-1 rounded-lg text-[11px] transition-all font-mono ${
               currentState === 'results' ? 'bg-[#D99A4E] text-[#12151C] font-semibold shadow' : 'text-[#8A93A3] hover:text-[#ECEEF3]'
             }`}
             onClick={() => switchState('results')}
           >
-            3. results
+            results
+          </button>
+          <button
+            className={`px-2.5 py-1 rounded-lg text-[11px] transition-all font-mono ${
+              currentState === 'policy' ? 'bg-[#D99A4E] text-[#12151C] font-semibold shadow' : 'text-[#8A93A3] hover:text-[#ECEEF3]'
+            }`}
+            onClick={() => switchState('policy')}
+          >
+            policy
+          </button>
+          <button
+            className={`px-2.5 py-1 rounded-lg text-[11px] transition-all font-mono ${
+              currentState === 'terms' ? 'bg-[#D99A4E] text-[#12151C] font-semibold shadow' : 'text-[#8A93A3] hover:text-[#ECEEF3]'
+            }`}
+            onClick={() => switchState('terms')}
+          >
+            terms
           </button>
         </aside>
 
@@ -1298,6 +1431,16 @@ export default function App() {
             </div>
           </section>
         )}
+
+        {/* STATE 4: PRIVACY & SECURITY POLICY PAGE */}
+        {currentState === 'policy' && (
+          <PrivacyPolicyPage onNavigate={switchState} />
+        )}
+
+        {/* STATE 5: TERMS OF SERVICE PAGE */}
+        {currentState === 'terms' && (
+          <TermsOfServicePage onNavigate={switchState} />
+        )}
       </main>
 
       {/* FLOATING BACK TO TOP BUTTON */}
@@ -1313,16 +1456,42 @@ export default function App() {
 
       {/* LUXURY FOOTER */}
       <footer className="w-full border-t border-[#2B303B] bg-[#0E1117] mt-auto py-12">
-        <div className="max-w-7xl mx-auto px-6 md:px-12 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#8A93A3] font-mono">
-          <div className="flex items-center gap-2">
-            <span>© StopTheDrip Financial Clarity</span>
-            <span>•</span>
-            <span className="text-[#6FA88C]">Zero Data Storage</span>
+        <div className="max-w-7xl mx-auto px-6 md:px-12 flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-[#8A93A3] font-mono">
+          <div className="flex flex-col sm:flex-row items-center gap-3 text-center sm:text-left">
+            <span className="text-[#ECEEF3] font-medium">© StopTheDrip Financial Clarity</span>
+            <span className="hidden sm:inline">•</span>
+            <span className="text-[#6FA88C] flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#6FA88C]"></span>
+              <span>Zero Persistent Storage</span>
+            </span>
           </div>
-          <div className="flex gap-6">
-            <a className="hover:text-[#ECEEF3] transition-colors" href="https://www.ilovepdf.com/unlock_pdf" target="_blank" rel="noopener noreferrer">iLovePDF Unlocker</a>
-            <a className="hover:text-[#ECEEF3] transition-colors" href="#">Privacy Suite</a>
-            <a className="hover:text-[#ECEEF3] transition-colors" href="#">Security Specs</a>
+          <div className="flex flex-wrap items-center justify-center gap-6">
+            <button
+              onClick={() => switchState('upload')}
+              className="hover:text-[#ECEEF3] transition-colors"
+            >
+              Statement Audit
+            </button>
+            <button
+              onClick={() => switchState('policy')}
+              className={`hover:text-[#ECEEF3] transition-colors ${currentState === 'policy' ? 'text-[#D99A4E] font-semibold' : ''}`}
+            >
+              Privacy & Security Policy
+            </button>
+            <button
+              onClick={() => switchState('terms')}
+              className={`hover:text-[#ECEEF3] transition-colors ${currentState === 'terms' ? 'text-[#D99A4E] font-semibold' : ''}`}
+            >
+              Terms of Service
+            </button>
+            <a
+              className="hover:text-[#ECEEF3] transition-colors text-[#6FA88C]"
+              href="https://www.ilovepdf.com/unlock_pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              iLovePDF Unlocker ↗
+            </a>
           </div>
         </div>
       </footer>

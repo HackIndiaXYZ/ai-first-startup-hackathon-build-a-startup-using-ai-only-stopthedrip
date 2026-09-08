@@ -42,6 +42,11 @@ app.add_middleware(
 )
 
 
+# Data Retention Policy: 0 seconds = ephemeral RAM-only execution (disposed immediately)
+RETENTION_POLICY_SECONDS = int(os.environ.get("RETENTION_POLICY_SECONDS", "0"))
+DATA_STORAGE_MODE = os.environ.get("DATA_STORAGE_MODE", "ephemeral-ram-only")
+
+
 @app.get("/")
 @app.get("/health")
 async def health_check():
@@ -52,8 +57,26 @@ async def health_check():
         "status": "active",
         "service": "StopTheDrip Financial Clarity API",
         "encryption": "256-bit AES-GCM active",
-        "storage": "zero-disk-in-memory-only",
+        "storage": DATA_STORAGE_MODE,
+        "retention_policy_seconds": RETENTION_POLICY_SECONDS,
         "ai_provider": "google-gemini" if has_gemini else ("anthropic" if has_anthropic else "heuristic-fallback")
+    }
+
+
+@app.get("/security-policy")
+async def get_security_policy():
+    """Telemetry endpoint providing technical security and retention specifications."""
+    return {
+        "service": "StopTheDrip Financial Clarity",
+        "encryption_standard": "AES-256-GCM / TLS 1.3",
+        "data_retention_policy": {
+            "retention_seconds": RETENTION_POLICY_SECONDS,
+            "mode": DATA_STORAGE_MODE,
+            "automatic_deletion": True,
+            "description": "Uploaded financial statements are parsed strictly in volatile memory and purged immediately post-request."
+        },
+        "supported_formats": [".pdf", ".csv", ".xlsx", ".xls", ".txt"],
+        "disclaimer": "This service provides automated transaction analytics and is not a registered financial or legal advisor."
     }
 
 
