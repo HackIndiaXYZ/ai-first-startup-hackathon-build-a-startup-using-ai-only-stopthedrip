@@ -192,132 +192,146 @@ def parse_csv_content(content_bytes: bytes) -> List[Dict[str, Any]]:
     return transactions
 
 
-def parse_pdf_content(content_bytes: bytes) -> List[Dict[str, Any]]:
+def parse_pdf_content(content_bytes: bytes, password: Optional[str] = None) -> List[Dict[str, Any]]:
     """
     Parse PDF bank statement into normalized transactions.
     Zero disk storage: parses directly from in-memory BytesIO.
+    Supports password-protected statements directly in-memory.
     """
     transactions: List[Dict[str, Any]] = []
 
-    with pdfplumber.open(io.BytesIO(content_bytes)) as pdf:
-        for page in pdf.pages:
-            # 1. Try extracting tables first
-            tables = page.extract_tables()
-            table_found_txns = False
+    try:
+        pdf_kwargs = {}
+        if password:
+            pdf_kwargs["password"] = password
 
-            for table in tables:
-                if not table or len(table) < 2:
-                    continue
-                
-                # Check headers
-                date_col = -1
-                desc_col = -1
-                amt_col = -1
-                debit_col = -1
+        with pdfplumber.open(io.BytesIO(content_bytes), **pdf_kwargs) as pdf:
+            for page in pdf.pages:
+                # 1. Try extracting tables first
+                tables = page.extract_tables()
+                table_found_txns = False
 
-                for c_idx, cell in enumerate(table[0]):
-                    if not cell:
-                        continue
-                    cl = str(cell).lower()
-                    if any(k in cl for k in ["date", "txn"]):
-                        date_col = c_idx
-                    elif any(k in cl for k in ["desc", "particular", "narrat", "detail", "merchant"]):
-                        desc_col = c_idx
-                    elif any(k in cl for k in ["debit", "withdrawal"]):
-                        debit_col = c_idx
-                    elif any(k in cl for k in ["amount", "amt", "total"]):
-                        amt_col = c_idx
-
-                for row in table[1:]:
-                    if not row or len(row) < 2:
+                for table in tables:
+                    if not table or len(table) < 2:
                         continue
                     
-                    row_strs = [str(c or "").strip() for c in row]
-                    d_val = ""
-                    desc_val = ""
-                    amt_val = None
+                    # Check headers
+                    date_col = -1
+                    desc_col = -1
+                    amt_col = -1
+                    debit_col = -1
 
-                    if date_col != -1 and date_col < len(row_strs):
-                        d_val = row_strs[date_col]
-                    if desc_col != -1 and desc_col < len(row_strs):
-                        desc_val = row_strs[desc_col]
+                    for c_idx, cell in enumerate(table[0]):
+                        if not cell:
+                            continue
+                        cl = str(cell).lower()
+                        if any(k in cl for k in ["date", "txn"]):
+                            date_col = c_idx
+                        elif any(k in cl for k in ["desc", "particular", "narrat", "detail", "merchant"]):
+                            desc_col = c_idx
+                        elif any(k in cl for k in ["debit", "withdrawal"]):
+                            debit_col = c_idx
+                        elif any(k in cl for k in ["amount", "amt", "total"]):
+                            amt_col = c_idx
 
-                    if debit_col != -1 and debit_col < len(row_strs) and row_strs[debit_col]:
-                        amt_val = clean_amount(row_strs[debit_col])
-                    elif amt_col != -1 and amt_col < len(row_strs) and row_strs[amt_col]:
-                        amt_val = clean_amount(row_strs[amt_col])
+                    for row in table[1:]:
+                        if not row or len(row) < 2:
+                            continue
+                        
+                        row_strs = [str(c or "").strip() for c in row]
+                        d_val = ""
+                        desc_val = ""
+                        amt_val = None
 
-                    # Heuristic fallback if columns not identified
-                    if amt_val is None:
-                        for cell in row_strs:
-                            c_amt = clean_amount(cell)
-                            if c_amt is not None and c_amt > 0:
-                                amt_val = c_amt
+                        if date_col != -1 and date_col < len(row_strs):
+                            d_val = row_strs[date_col]
+                        if desc_col != -1 and desc_col < len(row_strs):
+                            desc_val = row_strs[desc_col]
+
+                        if debit_col != -1 and debit_col < len(row_strs) and row_strs[debit_col]:
+                            amt_val = clean_amount(row_strs[debit_col])
+                        elif amt_col != -1 and amt_col < len(row_strs) and row_strs[amt_col]:
+                            amt_val = clean_amount(row_strs[amt_col])
+
+                        # Heuristic fallback if columns not identified
+                        if amt_val is None:
+                            for cell in row_strs:
+                                c_amt = clean_amount(cell)
+                                if c_amt is not None and c_amt > 0:
+                                    amt_val = c_amt
+                                    break
+
+                        if amt_val is not None and amt_val > 0:
+                            if not d_val:
+                                for cell in row_strs:
+                                    if any(re.search(p[0], cell) for p in DATE_PATTERNS):
+                                        d_val = cell
+                                        break
+                            if not desc_val:
+                                for cell in row_strs:
+                                    if len(cell) > 3 and clean_amount(cell) is None:
+                                        desc_val = cell
+                                        break
+
+                            transactions.append({
+                                "date": normalize_date(d_val),
+                                "description": desc_val or "Card Transaction",
+                                "amount": round(amt_val, 2)
+                            })
+                            table_found_txns = True
+
+                # 2. If table extraction yielded nothing on this page, parse raw lines
+                if not table_found_txns:
+                    text = page.extract_text() or ""
+                    for line in text.splitlines():
+                        line = line.strip()
+                        if not line:
+                            continue
+                        
+                        # Look for date and amount in line
+                        amt_match = re.findall(r"(?:₹|\$|€|£)?\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})|\d+(?:\.\d{2}))", line)
+                        date_match = None
+                        for pattern, _ in DATE_PATTERNS:
+                            m = re.search(pattern, line)
+                            if m:
+                                date_match = m.group(1)
                                 break
 
-                    if amt_val is not None and amt_val > 0:
-                        if not d_val:
-                            for cell in row_strs:
-                                if any(re.search(p[0], cell) for p in DATE_PATTERNS):
-                                    d_val = cell
-                                    break
-                        if not desc_val:
-                            for cell in row_strs:
-                                if len(cell) > 3 and clean_amount(cell) is None:
-                                    desc_val = cell
-                                    break
-
-                        transactions.append({
-                            "date": normalize_date(d_val),
-                            "description": desc_val or "Card Transaction",
-                            "amount": round(amt_val, 2)
-                        })
-                        table_found_txns = True
-
-            # 2. If table extraction yielded nothing on this page, parse raw lines
-            if not table_found_txns:
-                text = page.extract_text() or ""
-                for line in text.splitlines():
-                    line = line.strip()
-                    if not line:
-                        continue
-                    
-                    # Look for date and amount in line
-                    amt_match = re.findall(r"(?:₹|\$|€|£)?\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})|\d+(?:\.\d{2}))", line)
-                    date_match = None
-                    for pattern, _ in DATE_PATTERNS:
-                        m = re.search(pattern, line)
-                        if m:
-                            date_match = m.group(1)
-                            break
-
-                    if amt_match and date_match:
-                        # Extract amount (usually the debit amount)
-                        amt = clean_amount(amt_match[0])
-                        if amt and amt > 0:
-                            # Description is text between date and amount or remainder
-                            desc = line.replace(date_match, "").replace(amt_match[0], "").strip()
-                            desc = re.sub(r"^[^\w]+|[^\w]+$", "", desc)
-                            transactions.append({
-                                "date": normalize_date(date_match),
-                                "description": desc or "Card Payment",
-                                "amount": round(amt, 2)
-                            })
+                        if amt_match and date_match:
+                            # Extract amount (usually the debit amount)
+                            amt = clean_amount(amt_match[0])
+                            if amt and amt > 0:
+                                # Description is text between date and amount or remainder
+                                desc = line.replace(date_match, "").replace(amt_match[0], "").strip()
+                                desc = re.sub(r"^[^\w]+|[^\w]+$", "", desc)
+                                transactions.append({
+                                    "date": normalize_date(date_match),
+                                    "description": desc or "Card Payment",
+                                    "amount": round(amt, 2)
+                                })
+    except Exception as exc:
+        err_msg = str(exc).lower()
+        if "password" in err_msg or "encrypt" in err_msg or "unsupported encryption" in err_msg:
+            if password:
+                raise ValueError("PASSWORD_INCORRECT: The password provided for this PDF statement was incorrect. Please verify and try again.")
+            else:
+                raise ValueError("PASSWORD_REQUIRED: This PDF bank statement is password-protected. Please enter your statement password directly on the page to unlock.")
+        raise
 
     return transactions
 
 
-def parse_statement(filename: str, content_bytes: bytes) -> List[Dict[str, Any]]:
+def parse_statement(filename: str, content_bytes: bytes, password: Optional[str] = None) -> List[Dict[str, Any]]:
     """
-    Dispatcher to parse PDF or CSV bank statement based on filename/content.
+    Dispatcher to parse PDF or CSV bank statement based on filename/content with optional password.
     """
     fname = filename.lower()
     if fname.endswith(".pdf") or content_bytes.startswith(b"%PDF"):
-        return parse_pdf_content(content_bytes)
+        return parse_pdf_content(content_bytes, password=password)
     elif fname.endswith(".csv") or fname.endswith(".txt"):
         return parse_csv_content(content_bytes)
     else:
         # Try PDF first then CSV
         if content_bytes.startswith(b"%PDF"):
-            return parse_pdf_content(content_bytes)
+            return parse_pdf_content(content_bytes, password=password)
         return parse_csv_content(content_bytes)

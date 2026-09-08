@@ -87,12 +87,14 @@ async def analyze_statement_endpoint(
     nonce_b64: Optional[str] = Form(None),
     key_b64: Optional[str] = Form(None),
     encrypted_payload_b64: Optional[str] = Form(None),
+    password: Optional[str] = Form(None),
     use_sample: Optional[bool] = Form(False)
 ):
     """
     Primary analysis endpoint:
     - Ingests multipart file (PDF or CSV) or AES-256-GCM encrypted payload.
     - Operates purely in-memory (RAM) with zero disk persistence.
+    - Supports password-protected PDF bank statements via in-memory decryption.
     - Enforces a minimum ~1.5s delay so the analyzing animation plays smoothly.
     - Runs dual-agent classification and cancellation guide generation.
     """
@@ -130,9 +132,14 @@ async def analyze_statement_endpoint(
         if not content_bytes:
             raise HTTPException(status_code=400, detail="Uploaded statement file is empty.")
 
-        # Parse transactions in-memory
+        # Parse transactions in-memory with optional password
         try:
-            transactions = parse_statement(filename, content_bytes)
+            transactions = parse_statement(filename, content_bytes, password=password)
+        except ValueError as val_err:
+            err_msg = str(val_err)
+            if "PASSWORD_REQUIRED" in err_msg or "PASSWORD_INCORRECT" in err_msg:
+                raise HTTPException(status_code=422, detail=err_msg)
+            raise HTTPException(status_code=422, detail=f"Unable to parse statement: {err_msg}")
         except Exception as parse_err:
             raise HTTPException(status_code=422, detail=f"Unable to parse statement: {str(parse_err)}")
 

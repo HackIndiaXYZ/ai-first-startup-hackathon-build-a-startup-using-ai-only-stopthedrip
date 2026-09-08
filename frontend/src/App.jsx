@@ -329,6 +329,14 @@ export default function App() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [showConfigHelp, setShowConfigHelp] = useState(false)
 
+  // PDF In-Browser Password Unlock State
+  const [statementPassword, setStatementPassword] = useState('')
+  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false)
+  const [pendingFile, setPendingFile] = useState(null)
+  const [passwordError, setPasswordError] = useState(null)
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false)
+  const [showInlinePasswordInput, setShowInlinePasswordInput] = useState(false)
+
   // Telemetry Progression
   const [analyzingStep, setAnalyzingStep] = useState(1)
   const [loadingTitle, setLoadingTitle] = useState('Initializing in-memory decryption...')
@@ -466,8 +474,10 @@ export default function App() {
     }
   }
 
-  const performAnalysis = async (file, useSample = false) => {
+  const performAnalysis = async (file, useSample = false, pwd = null) => {
     setErrorMessage(null)
+    setPasswordError(null)
+    const activePassword = pwd !== null ? pwd : statementPassword
     const cleanupAnimation = startAnalyzingAnimation()
     const startTime = Date.now()
 
@@ -486,10 +496,12 @@ export default function App() {
           formData.append('nonce_b64', cryptoResult.nonceB64)
           formData.append('key_b64', cryptoResult.keyB64)
           formData.append('filename', file.name)
+          if (activePassword) formData.append('password', activePassword)
           uploadPayload = formData
         } else {
           const formData = new FormData()
           formData.append('file', file)
+          if (activePassword) formData.append('password', activePassword)
           uploadPayload = formData
         }
 
@@ -501,6 +513,19 @@ export default function App() {
 
         if (!response.ok) {
           const errText = await response.text()
+          if (errText.includes('PASSWORD_REQUIRED') || errText.includes('PASSWORD_INCORRECT')) {
+            const isIncorrect = errText.includes('PASSWORD_INCORRECT')
+            setPendingFile(file)
+            setPasswordError(
+              isIncorrect
+                ? 'Incorrect password. Most banks use DOB (DDMMYYYY) or PAN / Last 4 digits of debit card.'
+                : 'This PDF is password-protected. Enter the password below to unlock and analyze instantly.'
+            )
+            setShowPasswordPrompt(true)
+            cleanupAnimation()
+            switchState('upload')
+            return
+          }
           throw new Error(`Server returned ${response.status}: ${errText}`)
         }
 
@@ -524,6 +549,8 @@ export default function App() {
       }
 
       setResultsData(data || INITIAL_RESULTS)
+      setShowPasswordPrompt(false)
+      setPendingFile(null)
       cleanupAnimation()
       switchState('results')
     } catch (err) {
@@ -534,7 +561,7 @@ export default function App() {
         setResultsData(INITIAL_RESULTS)
         switchState('results')
       } else {
-        setErrorMessage(err.message || 'Unable to process statement. Please ensure password protection is removed.')
+        setErrorMessage(err.message || 'Unable to process statement.')
         switchState('upload')
       }
     }
@@ -543,6 +570,7 @@ export default function App() {
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0]
     if (file) {
+      setPendingFile(file)
       performAnalysis(file, false)
     }
   }
@@ -552,7 +580,17 @@ export default function App() {
     setIsDragOver(false)
     const file = e.dataTransfer.files?.[0]
     if (file) {
+      setPendingFile(file)
       performAnalysis(file, false)
+    }
+  }
+
+  const handleUnlockAndAnalyze = (e) => {
+    e?.preventDefault()
+    if (pendingFile) {
+      performAnalysis(pendingFile, false, statementPassword)
+    } else {
+      fileInputRef.current?.click()
     }
   }
 
@@ -963,6 +1001,61 @@ export default function App() {
                   </div>
                 </div>
 
+                {/* IN-BROWSER PDF PASSWORD UNLOCKER SECTION */}
+                <div className="p-5 rounded-2xl bg-[#181C25]/90 border border-[#2B303B] hover:border-[#D99A4E]/50 transition-all space-y-3 shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[#D99A4E] text-[18px]">key</span>
+                      <span className="text-xs font-semibold text-[#ECEEF3]">Password-Protected PDF Statement?</span>
+                    </div>
+                    <span className="text-[10px] font-mono text-[#6FA88C] bg-[#6FA88C]/10 px-2 py-0.5 rounded border border-[#6FA88C]/20">
+                      In-Browser Direct Unlock
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-[#8A93A3] leading-relaxed">
+                    No need to visit external unlocking websites. Type your PDF statement password directly below — it unlocks strictly in RAM and is never stored.
+                  </p>
+
+                  <div className="flex flex-col sm:flex-row items-center gap-2 pt-1">
+                    <div className="relative w-full">
+                      <input
+                        type={isPasswordVisible ? 'text' : 'password'}
+                        value={statementPassword}
+                        onChange={(e) => setStatementPassword(e.target.value)}
+                        placeholder="Enter statement password (e.g. DOB / PAN / Last 4 digits)..."
+                        className="w-full px-4 py-2.5 rounded-xl bg-[#0E1117] border border-[#2B303B] focus:border-[#D99A4E] text-xs font-mono text-[#ECEEF3] placeholder:text-[#8A93A3]/60 outline-none transition-all pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setIsPasswordVisible(!isPasswordVisible)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8A93A3] hover:text-[#ECEEF3] transition-colors"
+                        title={isPasswordVisible ? 'Hide password' : 'Show password'}
+                      >
+                        <span className="material-symbols-outlined text-[16px]">
+                          {isPasswordVisible ? 'visibility_off' : 'visibility'}
+                        </span>
+                      </button>
+                    </div>
+
+                    {pendingFile && (
+                      <button
+                        type="button"
+                        onClick={handleUnlockAndAnalyze}
+                        className="shimmer-btn w-full sm:w-auto px-5 py-2.5 rounded-xl text-[#12151C] text-xs font-semibold whitespace-nowrap flex items-center justify-center gap-1.5"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">lock_open</span>
+                        <span>Unlock & Audit</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="text-[10px] font-mono text-[#8A93A3] flex items-center gap-1.5 pt-0.5">
+                    <span className="text-[#D99A4E]">💡 Tip:</span>
+                    <span>HDFC/SBI/ICICI/Axis statements typically use DDMMYYYY, Name+DOB, or PAN card number.</span>
+                  </div>
+                </div>
+
                 {/* Instant Sample Button */}
                 <div className="flex flex-wrap items-center gap-4 pt-1">
                   <button
@@ -1001,26 +1094,20 @@ export default function App() {
                     </span>
                   </div>
 
-                  {/* Step 1: Unlock */}
+                  {/* Step 1: Direct Password Entry */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-2.5 text-xs font-semibold text-[#ECEEF3]">
                       <span className="w-5 h-5 rounded-full bg-[#D99A4E]/20 text-[#D99A4E] border border-[#D99A4E]/40 flex items-center justify-center text-[11px] font-mono">1</span>
-                      <span>Unlock Password-Protected PDF</span>
+                      <span>Type Password Directly on Page</span>
                     </div>
                     <p className="text-xs text-[#8A93A3] pl-7 leading-relaxed">
-                      Bank statements (HDFC, ICICI, SBI, Axis, etc.) are protected with your password (DOB/PAN). Unlock it first before uploading:
+                      If your bank statement PDF is password-protected (e.g. DOB/PAN), simply enter your password right in the box on the website. No external tools required!
                     </p>
                     <div className="pl-7 pt-1">
-                      <a
-                        href="https://www.ilovepdf.com/unlock_pdf"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#181C25] border border-[#2B303B] hover:border-[#D99A4E] text-xs font-medium text-[#D99A4E] hover:text-[#ECEEF3] transition-all shadow-md group"
-                      >
-                        <span className="material-symbols-outlined text-[16px] text-[#D99A4E] group-hover:scale-110 transition-transform">lock_open</span>
-                        <span>Unlock at iLovePDF.com</span>
-                        <span className="text-[10px] text-[#8A93A3] font-mono">↗</span>
-                      </a>
+                      <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#12151C] border border-[#6FA88C]/30 text-[11px] font-mono text-[#6FA88C]">
+                        <span className="material-symbols-outlined text-[15px]">key</span>
+                        <span>In-Memory Instant Decryption</span>
+                      </div>
                     </div>
                   </div>
 
@@ -1534,6 +1621,90 @@ export default function App() {
             >
               Got it
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* IN-BROWSER PDF PASSWORD UNLOCK MODAL */}
+      {showPasswordPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-xl p-4 animate-in fade-in">
+          <div className="glass-panel rounded-3xl max-w-md w-full p-6 md:p-8 shadow-2xl space-y-5 border-[#D99A4E]/50">
+            <div className="flex items-center justify-between border-b border-[#2B303B] pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-[#D99A4E]/10 border border-[#D99A4E]/30 flex items-center justify-center text-[#D99A4E]">
+                  <span className="material-symbols-outlined text-[18px]">lock</span>
+                </div>
+                <div>
+                  <h3 className="font-headline text-lg font-medium text-[#ECEEF3]">Unlock PDF Statement</h3>
+                  <span className="text-[10px] font-mono text-[#6FA88C] block">Direct In-Memory Decryption</span>
+                </div>
+              </div>
+              <button 
+                onClick={() => { setShowPasswordPrompt(false); setPendingFile(null); }}
+                className="text-[#8A93A3] hover:text-[#ECEEF3] text-sm p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            {passwordError && (
+              <div className="p-3 bg-[#3A1B1B] border border-[#FF6B6B]/40 text-[#FF6B6B] rounded-xl text-xs flex items-center gap-2.5">
+                <span className="material-symbols-outlined text-[16px] flex-shrink-0">info</span>
+                <span>{passwordError}</span>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-[#ECEEF3] block">
+                Statement Password for <span className="text-[#D99A4E] font-mono font-normal truncate">{pendingFile?.name || 'Uploaded PDF'}</span>:
+              </label>
+              <div className="relative">
+                <input
+                  type={isPasswordVisible ? 'text' : 'password'}
+                  value={statementPassword}
+                  onChange={(e) => setStatementPassword(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleUnlockAndAnalyze()
+                  }}
+                  autoFocus
+                  placeholder="Type PDF password..."
+                  className="w-full px-4 py-3 rounded-xl bg-[#0E1117] border border-[#2B303B] focus:border-[#D99A4E] text-xs font-mono text-[#ECEEF3] placeholder:text-[#8A93A3]/60 outline-none transition-all pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsPasswordVisible(!isPasswordVisible)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8A93A3] hover:text-[#ECEEF3] transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[16px]">
+                    {isPasswordVisible ? 'visibility_off' : 'visibility'}
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-[#12151C] border border-[#2B303B] space-y-1 text-[11px] text-[#8A93A3] font-mono leading-relaxed">
+              <span className="text-[#D99A4E] font-semibold block">Common Bank Password Formats:</span>
+              <p>• <strong>HDFC / SBI / ICICI:</strong> DOB (DDMMYYYY) or PAN card number.</p>
+              <p>• <strong>Axis / Kotak:</strong> First 4 letters of name (CAPS) + DOB (DDMM) or mobile number.</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => { setShowPasswordPrompt(false); setPendingFile(null); }}
+                className="px-4 py-3 rounded-xl bg-[#181C25] border border-[#2B303B] hover:border-[#8A93A3] text-xs font-mono text-[#8A93A3] hover:text-[#ECEEF3] transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleUnlockAndAnalyze}
+                className="shimmer-btn px-4 py-3 text-[#12151C] rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5"
+              >
+                <span className="material-symbols-outlined text-[16px]">lock_open</span>
+                <span>Unlock & Analyze</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
