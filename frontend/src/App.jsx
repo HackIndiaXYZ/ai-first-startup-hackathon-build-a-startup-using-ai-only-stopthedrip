@@ -571,7 +571,10 @@ export default function App() {
     const file = e.target.files?.[0]
     if (file) {
       setPendingFile(file)
-      performAnalysis(file, false)
+      setStatementPassword('')
+      setPasswordError(null)
+      setShowPasswordPrompt(false)
+      performAnalysis(file, false, '')
     }
   }
 
@@ -581,7 +584,10 @@ export default function App() {
     const file = e.dataTransfer.files?.[0]
     if (file) {
       setPendingFile(file)
-      performAnalysis(file, false)
+      setStatementPassword('')
+      setPasswordError(null)
+      setShowPasswordPrompt(false)
+      performAnalysis(file, false, '')
     }
   }
 
@@ -998,61 +1004,6 @@ export default function App() {
                     <p className="text-xs text-[#8A93A3]">
                       Encrypted locally in RAM before transmission • Zero files stored on disk
                     </p>
-                  </div>
-                </div>
-
-                {/* IN-BROWSER PDF PASSWORD UNLOCKER SECTION */}
-                <div className="p-5 rounded-2xl bg-[#181C25]/90 border border-[#2B303B] hover:border-[#D99A4E]/50 transition-all space-y-3 shadow-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[#D99A4E] text-[18px]">key</span>
-                      <span className="text-xs font-semibold text-[#ECEEF3]">Password-Protected PDF Statement?</span>
-                    </div>
-                    <span className="text-[10px] font-mono text-[#6FA88C] bg-[#6FA88C]/10 px-2 py-0.5 rounded border border-[#6FA88C]/20">
-                      In-Browser Direct Unlock
-                    </span>
-                  </div>
-
-                  <p className="text-[11px] text-[#8A93A3] leading-relaxed">
-                    No need to visit external unlocking websites. Type your PDF statement password directly below — it unlocks strictly in RAM and is never stored.
-                  </p>
-
-                  <div className="flex flex-col sm:flex-row items-center gap-2 pt-1">
-                    <div className="relative w-full">
-                      <input
-                        type={isPasswordVisible ? 'text' : 'password'}
-                        value={statementPassword}
-                        onChange={(e) => setStatementPassword(e.target.value)}
-                        placeholder="Enter statement password (e.g. DOB / PAN / Last 4 digits)..."
-                        className="w-full px-4 py-2.5 rounded-xl bg-[#0E1117] border border-[#2B303B] focus:border-[#D99A4E] text-xs font-mono text-[#ECEEF3] placeholder:text-[#8A93A3]/60 outline-none transition-all pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setIsPasswordVisible(!isPasswordVisible)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8A93A3] hover:text-[#ECEEF3] transition-colors"
-                        title={isPasswordVisible ? 'Hide password' : 'Show password'}
-                      >
-                        <span className="material-symbols-outlined text-[16px]">
-                          {isPasswordVisible ? 'visibility_off' : 'visibility'}
-                        </span>
-                      </button>
-                    </div>
-
-                    {pendingFile && (
-                      <button
-                        type="button"
-                        onClick={handleUnlockAndAnalyze}
-                        className="shimmer-btn w-full sm:w-auto px-5 py-2.5 rounded-xl text-[#12151C] text-xs font-semibold whitespace-nowrap flex items-center justify-center gap-1.5"
-                      >
-                        <span className="material-symbols-outlined text-[16px]">lock_open</span>
-                        <span>Unlock & Audit</span>
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="text-[10px] font-mono text-[#8A93A3] flex items-center gap-1.5 pt-0.5">
-                    <span className="text-[#D99A4E]">💡 Tip:</span>
-                    <span>HDFC/SBI/ICICI/Axis statements typically use DDMMYYYY, Name+DOB, or PAN card number.</span>
                   </div>
                 </div>
 
